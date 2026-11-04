@@ -3,7 +3,7 @@
 //   npm run ingest                 all lessons
 //   npm run ingest -- --lesson 1   just Lesson 1
 //   npm run ingest -- --dump 1     print Lesson 1's raw lines (for debugging)
-import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { readDocx } from "./docx.ts";
 import { parseLesson, type Item, type Resource, type ReviewNote } from "./parse.ts";
@@ -30,6 +30,29 @@ for (const { file, lesson } of files) {
   items.push(...r.items); resources.push(...r.resources); review.push(...r.review);
   console.log(`Lesson ${lesson}: ${r.items.length} items, ${r.duplicates} duplicates dropped, ${r.review.length} lines to review`);
 }
+
+// Corrections (e.g. spoken Tamil matching the Tanglish) live in lessons/overrides.json,
+// keyed by item id, so they survive re-running this script.
+// "checked: true" means a person looked at a flagged item and it's fine as is.
+type Override = Partial<Pick<Item, "english" | "tanglish" | "tamil" | "register" | "alternates">> & { checked?: boolean };
+const overrides: Record<string, Override> = existsSync("lessons/overrides.json")
+  ? JSON.parse(readFileSync("lessons/overrides.json", "utf8")) : {};
+let applied = 0;
+for (const item of items) {
+  const o = overrides[item.id];
+  if (!o) continue;
+  const { checked, ...changes } = o;
+  if (changes.tamil && changes.tamil !== item.tamil) item.formal = { tamil: item.tamil };
+  Object.assign(item, changes);
+  if (Object.keys(changes).length) item.needs_review = true;        // anything we wrote needs the teacher
+  const cleared = ["tanglish-tamil-mismatch", "check-register", "check-alignment", "missing-tanglish"];
+  if (checked || changes.tamil || changes.tanglish) item.tags = item.tags.filter((t) => !cleared.includes(t));
+  applied++;
+}
+const parsedIds = new Set(items.map((i) => i.id));
+const lost = Object.keys(overrides).filter((id) => !id.startsWith("_") && !parsedIds.has(id) && files.some((f) => id.startsWith(`L${String(f.lesson).padStart(2, "0")}-`)));
+if (applied) console.log(`Applied ${applied} overrides`);
+if (lost.length) console.warn(`WARNING: overrides for missing items (did the lesson text change?): ${lost.join(", ")}`);
 
 mkdirSync("data", { recursive: true });
 const lessons = files.map((f) => f.lesson);
