@@ -1,0 +1,14 @@
+# Teacher's lesson material and anything generated from it (repo is public)
+lessons/
+lessons.json
+data/
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+
+# Secrets (API keys stay server-side)
+.env
+.env.*
+!.env.example
