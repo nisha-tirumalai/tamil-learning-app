@@ -1,14 +1,14 @@
-# Teacher's lesson material and anything generated from it (repo is public)
-lessons/
-lessons.json
-data/
+# Teacher's lesson material (lessons/), its overrides, and the generated
+# data/ are committed with the teacher's approval (2026-11-04).
 
 # Dependencies and build output
 node_modules/
 .next/
 out/
 
-# Secrets (API keys stay server-side)
+# Secrets (API keys stay server-side) - must ALWAYS stay ignored
 .env
 .env.*
 !.env.example
+*.pem
+*.key

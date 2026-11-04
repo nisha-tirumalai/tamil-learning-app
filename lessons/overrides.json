@@ -1,0 +1,275 @@
+{
+  "_about": "Corrections applied on top of the parsed lessons, keyed by item id. 'tamil' is what text-to-speech reads; the parsed formal Tamil is kept as 'formal'. Anything changed here is needs_review until the teacher checks it. 'checked: true' = a flagged item was looked at and is fine as is.",
+
+  "_lesson1_story": "Spoken Tamil matching the teacher's Tanglish (provided by Nisha).",
+  "L01-5d9f9aee": {
+    "tanglish": "Athukku rubber sonnathu, “Neenga kavalai padaatheenga. Ithu ennoda kadamai.”",
+    "tamil": "அதுக்கு ரப்பர் சொன்னது, “நீங்க கவலைப்படாதீங்க. இது என்னோட கடமை.”",
+    "register": "colloquial"
+  },
+  "L01-4114db96": {
+    "tanglish": "Athai ketta pencil romba santhosham adainthathu.",
+    "tamil": "அதைக் கேட்ட பென்சில் ரொம்ப சந்தோஷம் அடைந்தது.",
+    "register": "colloquial",
+    "alternates": [
+      { "tanglish": "Atha ketta pencil romba santhoshappattuchu.", "tamil": "அத கேட்ட பென்சில் ரொம்ப சந்தோஷப்பட்டுச்சு." }
+    ]
+  },
+  "L01-1b734ab8": {
+    "tanglish": "Rubber thodarnthu sonnathu, “Ennaala unga thavarugal azhikkappattu neenga munnerinaal, athuve ennoda vetri.”",
+    "tamil": "ரப்பர் தொடர்ந்து சொன்னது, “என்னால உங்க தவறுகள் அழிக்கப்பட்டு நீங்க முன்னேறினால், அதுவே என்னோட வெற்றி.”",
+    "register": "colloquial"
+  },
+  "L01-16ec669d": {
+    "tanglish": "Antha rubber madhiri irukkiravanga thaan namma parents.",
+    "tamil": "அந்த ரப்பர் மாதிரி இருக்கிறவங்க தான் நம்ம பேரண்ட்ஸ்.",
+    "register": "colloquial"
+  },
+  "L01-03e185d6": {
+    "english": "Throughout their lives, they keep correcting our mistakes.",
+    "tanglish": "Nammudaiya thavarugalai avanga, avanga vaazhnal muzhuvadhum thiruthikkitte iruppaanga.",
+    "tamil": "நம்முடைய தவறுகளை அவங்க, அவங்க வாழ்நாள் முழுவதும் திருத்திக்கிட்டே இருப்பாங்க.",
+    "register": "colloquial"
+  },
+  "L01-67690a56": {
+    "english": "Those people with pure, good hearts, without jealousy and without selfishness, are our parents.",
+    "tanglish": "Poraamai illatha, suyanalam illatha antha thooimaiyana nalla ullangal kondavargal namma parents.",
+    "tamil": "பொறாமை இல்லாத, சுயநலம் இல்லாத அந்த தூய்மையான நல்ல உள்ளங்கள் கொண்டவர்கள் நம்ம பேரண்ட்ஸ்.",
+    "register": "colloquial"
+  },
+
+  "_spoken_tamil": "Written by Claude to match the teacher's Tanglish word for word. Teacher to check.",
+  "L01-75f0c8c0": {
+    "tanglish": "Nischayamaa, adhu romba easy-aa irukkum endru nambren.",
+    "register": "colloquial"
+  },
+  "L02-161ef8a5": {
+    "tamil": "அதனால அந்த டி-ஷர்ட்டை பர்த்டே கிஃப்டா வாங்கித் தர அம்மாகிட்ட கேட்டான்.",
+    "register": "colloquial"
+  },
+  "L02-fb8ff6f9": {
+    "tamil": "மிதுனும் அம்மாவும் ஆன்லைன்ல டி-ஷர்ட் பாத்தாங்க.",
+    "register": "colloquial"
+  },
+  "L02-93a2126e": {
+    "tamil": "அம்மா சைஸ் சார்ட் பாக்க ட்ரை பண்ணினாங்க.",
+    "register": "colloquial"
+  },
+  "L02-a2482d88": {
+    "tamil": "ஆனா வெப்சைட்ல கிளியர் இன்ஃபர்மேஷன் இல்ல.",
+    "register": "colloquial"
+  },
+  "L02-c7b64ac7": {
+    "tamil": "இருந்தாலும் மிதுன் ரொம்ப ஹேப்பியா இருந்ததை பாத்து ட்ரை பண்ணலாம்னு டிசைட் பண்ணினாங்க.",
+    "register": "colloquial"
+  },
+  "L02-be6f1bf5": {
+    "tamil": "சில நாள் கழிச்சு பார்சல் வந்தது.",
+    "register": "colloquial"
+  },
+  "L02-5717482e": {
+    "tamil": "மிதுனும் அம்மாவும் ரொம்ப ஆர்வமா ஓபன் பண்ணாங்க.",
+    "register": "colloquial"
+  },
+  "L02-5837fe94": {
+    "tamil": "மிதுனுக்கு பர்ஃபெக்டா ஃபிட் ஆயிடுச்சு.",
+    "register": "colloquial"
+  },
+  "L03-16e2a001": {
+    "tamil": "நான் அந்த வேலைய செய்யறேன்.",
+    "register": "colloquial"
+  },
+  "L03-8981ffc0": {
+    "tamil": "அவர்கள் அதனால உள்ள இருக்காங்க.",
+    "register": "colloquial"
+  },
+  "L03-765b07d1": {
+    "tamil": "அவர்கள் விளையாட்டுகள் விளையாடுறாங்க.",
+    "register": "colloquial"
+  },
+  "L04-7275c208": {
+    "tamil": "சூட்கேஸ் உடைஞ்சது.",
+    "register": "colloquial"
+  },
+  "L04-48d12f8b": {
+    "tamil": "வேற சூட்கேஸ் இல்லாதனால அவர் ரொம்ப பதட்டம் ஆயிட்டார்.",
+    "register": "colloquial"
+  },
+  "L04-89940ac8": {
+    "tamil": "அதிர்ஷ்டவசமா, சஞ்சீவன் கிட்ட ஒரு கூடுதல் சூட்கேஸ் இருந்தது.",
+    "register": "colloquial"
+  },
+  "L05-3cf9a745": {
+    "tamil": "வழியில்",
+    "register": "neutral"
+  },
+  "L05-9cb3d7c7": {
+    "tamil": "சரி, நீ காய், பழம் வாங்கிட்டு இரு. நான் கார் நிறுத்திட்டு வரேன்.",
+    "register": "colloquial"
+  },
+  "L05-9121e56a": {
+    "english": "Rs. 60 per kg.",
+    "tamil": "கிலோ அறுபது ரூபாய்.",
+    "register": "colloquial"
+  },
+  "L10-8e8db5e6": {
+    "tamil": "வேற ஏதும் வேணுமா சார்? எங்கள் கடையில ஸ்வீட் பிரட், வீட் ரஸ்க் பிரபலமாக இருக்கு. கட்லெட் இல்ல பீட்சா வாங்கறீங்களா?",
+    "register": "colloquial"
+  },
+  "L10-0492b7fd": {
+    "tamil": "அவைகள்",
+    "register": "formal"
+  },
+  "L11-c831b162": {
+    "tamil": "ஐரோப்பாவில் புத்தாண்டு வரும்போது மக்கள் ரொம்ப சந்தோஷமா இருப்பார்கள்.",
+    "register": "colloquial"
+  },
+  "L11-55dc958e": {
+    "tamil": "நள்ளிரவில் எல்லா இடத்திலும் பட்டாசு வெடிப்பாங்க.",
+    "register": "colloquial"
+  },
+  "L12-cc45f17f": {
+    "tamil": "பேனா வாங்க பணம் வேணும்னு அப்பாகிட்ட கேட்டேன்.",
+    "register": "colloquial"
+  },
+
+  "_or_alternates": "Tanglish that gave two versions with '(or)': main line matches the Tamil, the other version is an accepted alternate.",
+  "L02-a673d767": {
+    "tanglish": "Nāṉ naṉṟāga irukkiṟēṉ.",
+    "register": "formal",
+    "alternates": [{ "tanglish": "Naan nallaa irukken.", "tamil": "நான் நல்லா இருக்கேன்." }]
+  },
+  "L03-5c3cde43": {
+    "tanglish": "Thayavu seythu thelivupadutha mudiyumaa?",
+    "alternates": [{ "tanglish": "Thayavu seythu vilakka mudiyumaa?", "tamil": "தயவுசெய்து விளக்க முடியுமா?" }]
+  },
+  "L03-5fca2603": {
+    "tanglish": "Avargal puthagangalai padikkiraanga.",
+    "tamil": "அவர்கள் புத்தகங்களை படிக்கிறாங்க.",
+    "register": "colloquial",
+    "alternates": [{ "tanglish": "Avargal puthagangalai padiththu kondu irukkindranar.", "tamil": "அவர்கள் புத்தகங்களை படித்துக் கொண்டு இருக்கின்றனர்." }]
+  },
+  "L03-ff3fbcf7": {
+    "tanglish": "Avargal urangukindranar.",
+    "alternates": [{ "tanglish": "Avargal thoongukindranar.", "tamil": "அவர்கள் தூங்குகின்றனர்." }]
+  },
+  "L03-2799186d": {
+    "tanglish": "Avargal ondraaga pesi sirikkindranar.",
+    "tamil": "அவர்கள் ஒன்றாக பேசி சிரிக்கின்றனர்.",
+    "alternates": [{ "tanglish": "Avargal onna pesi sirikkiraanga.", "tamil": "அவர்கள் ஒண்ணா பேசி சிரிக்கிறாங்க." }]
+  },
+  "L03-25b062d8": {
+    "tanglish": "Avangalukku mazhai peiyura saththathai kekkurathu romba pidikkum.",
+    "tamil": "அவங்களுக்கு மழை பெய்யுற சத்தத்தை கேக்குறது ரொம்ப பிடிக்கும்.",
+    "register": "colloquial",
+    "alternates": [{ "tanglish": "Avargal mazhai peyyum saththathai kaettu magizhgindranar.", "tamil": "அவர்கள் மழை பெய்யும் சத்தத்தை கேட்டு மகிழ்கின்றனர்." }]
+  },
+  "L03-4577634d": {
+    "tanglish": "Avanga naalai enna seiyap pogirom endru plan pandranga.",
+    "tamil": "அவங்க நாளை என்ன செய்யப் போகிறோம் என்று பிளான் பண்றாங்க.",
+    "register": "colloquial",
+    "alternates": [{ "tanglish": "Avargal naalai enna seiyap pogirom endru thittamidugindranar.", "tamil": "அவர்கள் நாளை என்ன செய்யப்போகிறோம் என்று திட்டமிடுகின்றனர்." }]
+  },
+  "L05-ca7cd76e": {
+    "tanglish": "Uṅgaḷiṭam change uḷḷathā?",
+    "tamil": "உங்களிடம் சேஞ்ச் உள்ளதா?",
+    "alternates": [{ "tanglish": "Unga kitta change irukka?", "tamil": "உங்க கிட்ட சேஞ்ச் இருக்கா?" }]
+  },
+
+  "_tanglish_added": "These lessons gave only English + Tamil. Tanglish written by Claude from the Tamil. Teacher to check.",
+  "L01-b67348e9": { "tanglish": "All the best!" },
+  "L11-6d2371c1": { "tanglish": "Vanakkam! Eppadi irukkeenga?" },
+  "L11-1178ad72": { "tanglish": "Naan nallaa irukken, nandri." },
+  "L11-8247a44d": { "tanglish": "Unga peyar enna?" },
+  "L11-97c5ff1f": { "tanglish": "Idhu evvalavu?" },
+  "L11-23c7827c": { "tanglish": "Idhu nooru roobaai." },
+  "L11-fa7dc38d": { "tanglish": "Adhu kudunga." },
+  "L12-0ed3193f": {
+    "tanglish": "Bye daa. Take care.",
+    "tamil": "பை டா. டேக் கேர்.",
+    "alternates": [{ "tanglish": "Bye daa. Kavanichukko.", "tamil": "பை டா. கவனிச்சுக்கோ." }]
+  },
+  "L12-3121157a": { "tanglish": "Neenga enga poreenga?" },
+  "L12-9d8f0ed7": { "tanglish": "Naan kadaikku poren." },
+  "L12-de77cab5": { "tanglish": "Mani enna?" },
+  "L12-f5d0fb79": { "tanglish": "Mani anju." },
+  "L12-4a1a4b05": { "tanglish": "Romba nandri." },
+  "L12-270e8a38": { "tanglish": "Mannikkavum." },
+  "L12-15d84407": { "tanglish": "Dhayavu seidhu." },
+  "L12-0e65c3a1": { "tanglish": "Poyittu varren." },
+  "L12-6efbe5bb": { "tanglish": "Ulle vaanga." },
+  "L12-980239fe": { "tanglish": "Ukkaarunga." },
+  "L12-496e227a": { "tanglish": "Purinjadhaa?" },
+  "L12-d8eb2705": { "tanglish": "Oru nimisham irunga." },
+  "L12-ed608e8a": { "tanglish": "Enakku theriyaadhu." },
+
+  "_vocab_fixes": "Short vocab where English/Tanglish were swapped, the Tamil was a different word from the Tanglish, or the Tanglish listed two forms.",
+  "L07-eb73acc7": { "english": "Lie", "tanglish": "Poi" },
+  "L10-dfe674eb": { "english": "Sage / Wise person", "tanglish": "Gnani" },
+  "L05-b2ad488f": { "tamil": "இந்தாங்க.", "register": "colloquial" },
+  "L01-e01db68a": {
+    "tamil": "திரும்ப பாரு", "register": "colloquial",
+    "alternates": [{ "tanglish": "Marupadiyum paaru", "tamil": "மறுபடியும் பாரு" }]
+  },
+  "L01-213561f8": {
+    "english": "Need to replace", "tamil": "மாத்தணும்", "register": "colloquial",
+    "alternates": [{ "tanglish": "Maatrudhal", "tamil": "மாற்றுதல்" }]
+  },
+  "L03-8823dce9": { "tamil": "கேள்" },
+  "L08-b5b9479e": { "tamil": "ஏற்று" },
+  "L10-fe5ead78": { "tamil": "முட்டை இல்லாத" },
+  "L03-f1cc5e8d": { "english": "Read", "tanglish": "Vaasi / Padi" },
+  "L03-842a507f": { "tanglish": "Onru", "alternates": [{ "tanglish": "Onnu", "tamil": "ஒண்ணு" }] },
+  "L03-3bf0bd7a": { "tanglish": "Moonru", "alternates": [{ "tanglish": "Moonu", "tamil": "மூணு" }] },
+  "L03-2774edf6": { "english": "Inside", "tanglish": "Ullae", "alternates": [{ "tanglish": "Ulla", "tamil": "உள்ள" }] },
+  "L08-e7167d52": { "tanglish": "Thaai", "alternates": [{ "tanglish": "Amma", "tamil": "அம்மா" }] },
+  "L05-f901bd13": { "tanglish": "Pai", "alternates": [{ "tanglish": "Bag", "tamil": "பேக்" }] },
+
+  "_book_lesson_1": "Adi's Book Lesson 1 (pilot). The book has no Tamil script; all Tamil below written by Claude from the book's romanization. Teacher to check.",
+  "B01-6f9344b0": { "tamil": "அப்பா" },
+  "B01-f95016b6": { "tamil": "அம்மா" },
+  "B01-eef2295f": { "tamil": "வணக்கம்" },
+  "B01-f462fe87": { "tamil": "ஸ்தோத்திரம்" },
+  "B01-72a0b587": { "tamil": "நமஸ்தே" },
+  "B01-76928479": { "tamil": "வாங்க" },
+  "B01-0be8213a": { "tamil": "உக்காருங்க" },
+  "B01-9b54dc37": { "tamil": "நீங்க" },
+  "B01-c131b6e9": { "tamil": "யார்" },
+  "B01-11e623a3": { "tamil": "நான்" },
+  "B01-4f2ca6ba": { "tamil": "ஐயா வணக்கம்", "alternates": [{ "tanglish": "vaṇakkam aiyā", "tamil": "வணக்கம் ஐயா" }] },
+  "B01-0bc9d698": { "tamil": "அம்மா வணக்கம்", "alternates": [{ "tanglish": "vaṇakkam ammā", "tamil": "வணக்கம் அம்மா" }] },
+  "B01-1b225ed8": { "tamil": "அம்மா வாங்க" },
+  "B01-fed54285": { "tamil": "ஐயா வாங்க." },
+  "B01-bc10989f": { "tamil": "அம்மா உக்காருங்க" },
+  "B01-730cdee3": { "tamil": "ஐயா உக்காருங்க." },
+  "B01-adfca626": { "tamil": "வாங்க அம்மா", "alternates": [{ "tanglish": "vāngammā", "tamil": "வாங்கம்மா" }] },
+  "B01-f6a926cc": { "tamil": "வாங்க ஐயா", "alternates": [{ "tanglish": "vāngaiyā", "tamil": "வாங்கய்யா" }] },
+  "B01-2e58da7e": { "tamil": "உக்காருங்க அம்மா", "alternates": [{ "tanglish": "ukkārungammā", "tamil": "உக்காருங்கம்மா" }] },
+  "B01-666929b3": { "tamil": "உக்காருங்க ஐயா", "alternates": [{ "tanglish": "ukkārungaiyā", "tamil": "உக்காருங்கய்யா" }] },
+  "B01-d54c9654": { "tamil": "அம்மா, நீங்க யார்?" },
+  "B01-4fca73a4": { "tanglish": "aiyā, nīnga yār?", "tamil": "ஐயா, நீங்க யார்?" },
+  "B01-709ebae1": { "tamil": "நீங்க யார் அம்மா?", "alternates": [{ "tanglish": "nīnga yārmā?", "tamil": "நீங்க யார்மா?" }] },
+  "B01-c4d8431b": { "tamil": "நீங்க யார் ஐயா?", "alternates": [{ "tanglish": "nīnga yāraiyā?", "tamil": "நீங்க யாரய்யா?" }] },
+  "B01-754d6e07": { "tamil": "நீங்க யார்?" },
+  "B01-f3dd095d": { "tamil": "நீங்க யார் அப்பா?", "alternates": [{ "tanglish": "nīnga yārpā?", "tamil": "நீங்க யார்ப்பா?" }] },
+  "B01-70d79d58": { "tamil": "வாங்க அப்பா", "alternates": [{ "tanglish": "vāngappā", "tamil": "வாங்கப்பா" }] },
+  "B01-5f8c86f4": { "tamil": "நீங்க உக்காருங்கப்பா." },
+  "B01-97b00913": { "tamil": "வணக்கம் அம்மா." },
+  "B01-08074501": { "tamil": "வணக்கம் ஐயா." },
+  "B01-08b9d29f": { "tamil": "வாங்க, வாங்க, உக்காருங்க." },
+  "B01-a35c1c4a": { "tamil": "நன்றி, ஐயா." },
+  "B01-1bae4fc5": { "tamil": "நான் அம்மா." },
+
+  "_checked": "Flagged by the script but the Tanglish and Tamil already match.",
+  "L04-fe6da59b": { "checked": true },
+  "L08-fe6da59b": { "checked": true },
+  "L12-fe6da59b": { "checked": true },
+  "L05-c074c78c": { "checked": true },
+  "L08-3b997cad": { "checked": true },
+  "L12-610d0a08": { "checked": true },
+  "L07-3c4e0f60": { "checked": true },
+  "L07-4353c773": { "checked": true },
+  "L07-cd2f2976": { "checked": true },
+  "L09-0d8d8c83": { "checked": true },
+  "L10-f78f2b00": { "checked": true }
+}
