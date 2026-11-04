@@ -9,6 +9,15 @@ import { createHash } from "node:crypto";
 import type { PdfLine } from "./pdf.ts";
 import { englishness, type Item, type ItemType } from "./parse.ts";
 
+// Lines whose fonts are mixed up in the PDF, so the normal shape check skips them.
+// Matched against the line's plain text; the repaired line is parsed like any other.
+// [\s\u0085]: the PDF has an invisible "next line" character (U+0085) between the
+// words, which JavaScript's \s doesn't match.
+const REPAIRS: { match: RegExp; tanglish: string; english: string; tags: string[] }[] = [
+  { match: /^namaskāram[\s\u0085]*Greeting, interchangeable/, tanglish: "namaskāram", english: "Greeting, interchangeable with ‘vaṇakkam’.", tags: ["greeting"] },
+  { match: /^nandri[\s\u0085]*Thanks/, tanglish: "nandri", english: "Thanks.", tags: ["greeting"] },
+];
+
 export function parseBookLesson(pages: PdfLine[][], lesson: number): Item[] {
   const lines = pages.flat();
   const start = lines.findIndex((l) => isLessonHeading(l, lesson));
@@ -24,7 +33,10 @@ export function parseBookLesson(pages: PdfLine[][], lesson: number): Item[] {
     if (/^short sentences/i.test(text)) { section = "Short Sentences"; continue; }
 
     // Expect: optional label ("3." or "A."), then romanized Tamil, then English.
-    let pieces = line;
+    const repair = REPAIRS.find((r) => r.match.test(text));
+    let pieces: PdfLine = repair
+      ? [{ kind: "tl", text: repair.tanglish }, { kind: "en", text: repair.english }] as PdfLine
+      : line;
     let label = "";
     if (pieces[0]?.kind === "en" && /^\s*(\d+\.?|[A-Z]\.)\s*$/.test(pieces[0].text)) { label = pieces[0].text.trim(); pieces = pieces.slice(1); }
     if (pieces.length !== 2 || pieces[0].kind !== "tl" || pieces[1].kind !== "en") continue;
@@ -52,7 +64,7 @@ export function parseBookLesson(pages: PdfLine[][], lesson: number): Item[] {
       register: "colloquial",                                 // the book teaches spoken Tamil
       ...(type === "dialogue" ? { speaker: label.slice(0, 1) } : {}),
       ...(alternates.length ? { alternates } : {}),
-      needs_review: true, tags: ["missing-tamil"],
+      needs_review: true, tags: ["missing-tamil", ...(repair?.tags ?? [])],
     });
   }
   return items;

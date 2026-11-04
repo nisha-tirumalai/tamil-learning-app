@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04T16:09:39.800Z",
+  "generatedAt": "2026-11-04T21:16:37.529Z",
   "lessons": [
     1,
     2,
@@ -24026,6 +24026,21 @@
       "tags": []
     },
     {
+      "id": "B01-6d535ac4",
+      "source": "book",
+      "lesson": 1,
+      "type": "vocab",
+      "section": "Vocabulary",
+      "english": "Greeting, interchangeable with ‘vaṇakkam’.",
+      "tanglish": "namaskāram",
+      "tamil": "நமஸ்காரம்",
+      "register": "colloquial",
+      "needs_review": true,
+      "tags": [
+        "greeting"
+      ]
+    },
+    {
       "id": "B01-f462fe87",
       "source": "book",
       "lesson": 1,
@@ -24115,6 +24130,21 @@
       "register": "colloquial",
       "needs_review": true,
       "tags": []
+    },
+    {
+      "id": "B01-ae381502",
+      "source": "book",
+      "lesson": 1,
+      "type": "vocab",
+      "section": "Vocabulary",
+      "english": "Thanks.",
+      "tanglish": "nandri",
+      "tamil": "நன்றி",
+      "register": "colloquial",
+      "needs_review": true,
+      "tags": [
+        "greeting"
+      ]
     },
     {
       "id": "B01-4f2ca6ba",
