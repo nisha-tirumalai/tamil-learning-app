@@ -1,0 +1,21 @@
+{
+  "name": "tamil-learning-app",
+  "version": "1.0.0",
+  "description": "Created a Tamil Learning App for those who want to speak, but not read and write!",
+  "scripts": {
+    "ingest": "node scripts/ingest/ingest.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nisha-tirumalai/tamil-learning-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/nisha-tirumalai/tamil-learning-app/issues"
+  },
+  "homepage": "https://github.com/nisha-tirumalai/tamil-learning-app#readme",
+  "private": true
+}
