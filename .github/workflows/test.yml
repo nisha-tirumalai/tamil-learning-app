@@ -1,0 +1,46 @@
+# Runs all the tests on every push (and on pull requests).
+# The database tests use a throwaway Supabase started right here from
+# supabase/migrations/, so no secrets are needed and real data is never touched.
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start a throwaway Supabase
+        # -x skips services the tests don't use, so it starts faster.
+        run: |
+          supabase start -x studio,imgproxy,realtime,storage-api,edge-runtime,logflare,vector
+          eval "$(supabase status -o env)"
+          echo "TEST_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "TEST_SUPABASE_ANON_KEY=$ANON_KEY" >> "$GITHUB_ENV"
+          echo "TEST_SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY" >> "$GITHUB_ENV"
+
+      - name: Make sure the database tests won't be skipped
+        # They skip themselves without these, so stop here instead of passing quietly.
+        run: test -n "$TEST_SUPABASE_URL" && test -n "$TEST_SUPABASE_ANON_KEY" && test -n "$TEST_SUPABASE_SERVICE_ROLE_KEY"
+
+      - name: Run tests
+        run: npm test

@@ -1,0 +1,13 @@
+# Settings for the throwaway local Supabase that GitHub Actions starts to run
+# the database tests (`supabase start`). The real (hosted) project is set up by
+# hand: see docs/SUPABASE_SETUP.md. Anything not listed uses Supabase's defaults.
+project_id = "tamil-learning-app"
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+
+# Same invite-only rule as the hosted project.
+[auth.hook.before_user_created]
+enabled = true
+uri = "pg-functions://postgres/public/hook_before_user_created"

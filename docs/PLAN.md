@@ -6,13 +6,41 @@ milestone (status table, "Where we are", and any new decisions).
 
 ## Where we are
 
-- **Milestone 1 (lesson data):** done.
-- **Greetings** (*namaskāram*, *nandri*) added.
-- **Next:** milestone 2 (login + per-user data).
+- **Milestone 1 (lesson data):** done. Greetings (*namaskāram*, *nandri*) added.
+- **Milestone 2 (login + per-user data, flags, CI):** code written and committed,
+  but **not yet run**. Claude's session can't install packages (see blocker), so
+  the app, type-check and tests haven't been executed. Only the lesson-data logic
+  was checked with plain Node.
+- **Next:** Nisha follows [SUPABASE_SETUP.md](SUPABASE_SETUP.md): creates the
+  project, runs the migration, adds herself to the allowlist, turns on the hook,
+  fills `.env.local`, runs `npm install` + `npm run dev`, tries login and flagging,
+  then commits `package-lock.json` and pushes. Then: fix whatever the first real run
+  and the first GitHub Actions run turn up, and mark milestone 2 done.
 - **Blocker:** npm can't download packages from Claude's session (TLS handshake
   failure to registry.npmjs.org, even outside the sandbox). Nisha runs `npm install`
   in her own terminal; if that fails too, a VPN, antivirus "HTTPS scanning", or a
   work/school network is the likely cause.
+- **Pushing:** Claude's session has no GitHub login, so Nisha pushes (`git push`
+  or **Sync Changes** in VS Code).
+
+### Milestone 2: what was built
+- `supabase/migrations/20261104000000_init.sql`: allowlist + Before User Created
+  hook, profiles (auto-created on sign-up; `is_admin` not user-editable),
+  card_state, review_log, daily_activity, flags (own rows only), usage_daily
+  (read-only to users).
+- App (Next.js 15, `src/`): magic-link login (`/login`, `/auth/callback`,
+  `/auth/signout`), middleware sending signed-out visitors to /login, lesson list
+  (`/`), lesson pages with cards (`/lessons/[key]`, e.g. `1` or `book-1`), and
+  **My flags** (`/flags`: mark sorted / reopen / delete).
+- **"Looks wrong?"** on every card: optional note, saved via a server action that
+  snapshots English/Tanglish from `data/lessons.json`. `flags.source` already
+  allows `'chat'` for the tutor (milestone 7).
+- Tests: `tests/lessons.test.ts` and `tests/rls.test.ts`, explained in
+  [TESTS.md](TESTS.md). CI: `.github/workflows/test.yml` (npm ci → typecheck →
+  local Supabase from the migration → vitest).
+- Google sign-in isn't built yet: magic link only (see the open question below).
+- `scripts/` is left out of `npm run typecheck` for now (never type-checked
+  before); add it back once its errors, if any, are fixed.
 
 ## The goal (from the original brief)
 
@@ -48,7 +76,7 @@ songs and Thirukkural, in both formal and colloquial Tamil.
 | # | Milestone | Status |
 |---|-----------|--------|
 | 1 | Lesson data: parse lessons + book into `data/lessons.json` | ✅ Done |
-| 2 | Supabase login (magic link or Google), invite allowlist, per-user tables with RLS, a test that one user can't read another's data. Plus: "this looks wrong" button + "My flags" page, and GitHub Actions running tests on every push | Next |
+| 2 | Supabase login (magic link or Google), invite allowlist, per-user tables with RLS, a test that one user can't read another's data. Plus: "this looks wrong" button + "My flags" page, and GitHub Actions running tests on every push | 🔧 Code written, not yet run |
 | 3 | Flashcards with spaced repetition (FSRS via ts-fsrs), plus a "words to review" list | |
 | 4 | 5-minute daily session and streak | |
 | 5 | "Finish the sentence" drills | |
