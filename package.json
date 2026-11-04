@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Created a Tamil Learning App for those who want to speak, but not read and write!",
   "scripts": {
-    "ingest": "node scripts/ingest/ingest.ts"
+    "ingest": "node scripts/ingest/ingest.ts",
+    "review-export": "node scripts/ingest/review-export.ts"
   },
   "repository": {
     "type": "git",

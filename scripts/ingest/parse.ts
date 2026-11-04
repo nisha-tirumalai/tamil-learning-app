@@ -12,6 +12,7 @@ export type Register = "colloquial" | "formal" | "neutral";
 
 export interface Item {
   id: string;
+  source?: "book";                               // absent = the teacher's lesson files
   lesson: number;
   type: ItemType;
   section: string;
@@ -103,7 +104,7 @@ const TA_SOUND: Record<string, string> = {
 };
 function tamilSkeleton(ta: string): string {
   // ன்ற is said "ndr" and ற்ற is said "tr" (நன்றி = nandri, வெற்றி = vetri).
-  ta = ta.replace(/ன்ற/g, "nt").replace(/ற்ற/g, "tr");
+  ta = ta.replace(/ன்ற/g, "ntr").replace(/ற்ற/g, "tr");
   return [...ta].map((ch) => TA_SOUND[ch] ?? (/[\s\w]/.test(ch) ? ch.toLowerCase() : "")).join("");
 }
 function latinSkeleton(tl: string): string {

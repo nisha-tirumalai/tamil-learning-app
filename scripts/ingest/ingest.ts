@@ -3,15 +3,32 @@
 //   npm run ingest                 all lessons
 //   npm run ingest -- --lesson 1   just Lesson 1
 //   npm run ingest -- --dump 1     print Lesson 1's raw lines (for debugging)
+//   npm run ingest -- --book-dump 1  print the book's Lesson 1 lines («» = romanized Tamil)
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { parseBookLesson } from "./book.ts";
 import { readDocx } from "./docx.ts";
 import { parseLesson, type Item, type Resource, type ReviewNote } from "./parse.ts";
+import { readPdf } from "./pdf.ts";
+
+// Adi's Book lessons to include. Added a few at a time, because its Tamil
+// script is written by Claude and has to be checked by the teacher.
+const BOOK = "lessons/other-resources-Tamil-Teaching-Adis-Book-9.4.07pdf.pdf";
+const BOOK_LESSONS = [1];
 
 const args = process.argv.slice(2);
 const flag = (name: string) => { const i = args.indexOf(name); return i >= 0 ? Number(args[i + 1]) : undefined; };
 const only = flag("--lesson");
 const dump = flag("--dump");
+const bookDump = flag("--book-dump");
+
+if (bookDump) {
+  const lines = readPdf(BOOK).flat();
+  const at = lines.findIndex((l) => new RegExp(`^\\s*LESSON\\s+${bookDump}\\b`).test(l.map((p) => p.text).join("")));
+  const next = lines.findIndex((l, i) => i > at && /^\s*LESSON\s+\d+/.test(l.map((p) => p.text).join("")));
+  for (const l of lines.slice(at, next)) console.log(l.map((p) => (p.kind === "tl" ? `«${p.text}»` : p.text)).join(""));
+  process.exit(0);
+}
 
 const files = readdirSync("lessons")
   .map((f) => ({ file: f, lesson: Number(f.match(/^lesson_(\d+)\.docx$/i)?.[1]) }))
@@ -30,6 +47,15 @@ for (const { file, lesson } of files) {
   items.push(...r.items); resources.push(...r.resources); review.push(...r.review);
   console.log(`Lesson ${lesson}: ${r.items.length} items, ${r.duplicates} duplicates dropped, ${r.review.length} lines to review`);
 }
+const bookLessons = only || !existsSync(BOOK) ? [] : BOOK_LESSONS;
+if (bookLessons.length) {
+  const pages = readPdf(BOOK);
+  for (const n of bookLessons) {
+    const bookItems = parseBookLesson(pages, n);
+    items.push(...bookItems);
+    console.log(`Book lesson ${n}: ${bookItems.length} items`);
+  }
+}
 
 // Corrections (e.g. spoken Tamil matching the Tanglish) live in lessons/overrides.json,
 // keyed by item id, so they survive re-running this script.
@@ -42,21 +68,25 @@ for (const item of items) {
   const o = overrides[item.id];
   if (!o) continue;
   const { checked, ...changes } = o;
-  if (changes.tamil && changes.tamil !== item.tamil) item.formal = { tamil: item.tamil };
+  if (changes.tamil && item.tamil && changes.tamil !== item.tamil) item.formal = { tamil: item.tamil };
   Object.assign(item, changes);
   if (Object.keys(changes).length) item.needs_review = true;        // anything we wrote needs the teacher
+  if (changes.tamil) item.tags = item.tags.filter((t) => t !== "missing-tamil");
   const cleared = ["tanglish-tamil-mismatch", "check-register", "check-alignment", "missing-tanglish"];
   if (checked || changes.tamil || changes.tanglish) item.tags = item.tags.filter((t) => !cleared.includes(t));
   applied++;
 }
 const parsedIds = new Set(items.map((i) => i.id));
-const lost = Object.keys(overrides).filter((id) => !id.startsWith("_") && !parsedIds.has(id) && files.some((f) => id.startsWith(`L${String(f.lesson).padStart(2, "0")}-`)));
+const prefixes = [...files.map((f) => `L${String(f.lesson).padStart(2, "0")}-`), ...bookLessons.map((n) => `B${String(n).padStart(2, "0")}-`)];
+const lost = Object.keys(overrides).filter((id) => !parsedIds.has(id) && prefixes.some((p) => id.startsWith(p)));
 if (applied) console.log(`Applied ${applied} overrides`);
 if (lost.length) console.warn(`WARNING: overrides for missing items (did the lesson text change?): ${lost.join(", ")}`);
+const noTamil = items.filter((i) => !i.tamil);
+if (noTamil.length) console.warn(`${noTamil.length} items have no Tamil script yet (tagged missing-tamil); they can't have audio until it's added.`);
 
 mkdirSync("data", { recursive: true });
 const lessons = files.map((f) => f.lesson);
-writeFileSync("data/lessons.json", JSON.stringify({ generatedAt: new Date().toISOString(), lessons, items, resources }, null, 2));
+writeFileSync("data/lessons.json", JSON.stringify({ generatedAt: new Date().toISOString(), lessons, bookLessons, items, resources }, null, 2));
 writeFileSync("data/review.json", JSON.stringify(review, null, 2));
 
 const count = (key: (i: Item) => string) =>
