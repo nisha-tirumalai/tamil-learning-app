@@ -176,6 +176,8 @@ every message.
   It can teach a new word now and then.
 - **Daily cap message:** "See you tomorrow."
 - **Errors:** friendlier than "Something went wrong" (wording to confirm).
+- **Continue (option A):** after the card, the tutor waits until I tap **Continue**.
+- **Past conversations view:** later (moved to Later Ideas). Messages are still saved in v1.
 - **Still open:** rubric (drop "meaning" from the score and show "What I
-  understood" instead?), option A vs B for continue, tutor personality, saved
-  history and delete, past-conversations view.
+  understood" instead?), tutor personality, delete button, error wording,
+  safety approach, card layout.
