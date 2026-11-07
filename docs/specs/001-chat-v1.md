@@ -178,6 +178,8 @@ every message.
 - **Errors:** friendlier than "Something went wrong" (wording to confirm).
 - **Continue (option A):** after the card, the tutor waits until I tap **Continue**.
 - **Past conversations view:** later (moved to Later Ideas). Messages are still saved in v1.
-- **Still open:** rubric (drop "meaning" from the score and show "What I
+- **Error message:** "Aiyo! Something broke on my side 😅 Your message is safe, tap to try again."
+- **Phone check (done when):** I send 10 real messages and the corrections feel right.
+- **Still open:** past conversations in v1 after all? (2026-11-07 message unclear), rubric (drop "meaning" from the score and show "What I
   understood" instead?), tutor personality, delete button, error wording,
   safety approach, card layout.
