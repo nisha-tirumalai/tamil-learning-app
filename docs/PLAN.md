@@ -115,6 +115,7 @@ where `user_id` is you"), tested in `tests/rls.test.ts`.
   (for `supabase start`). Keys are Codespaces secrets (environment variables in the
   codespace), so no `.env.local` is needed. Redirects and server actions use the
   forwarded `*.app.github.dev` address, not `localhost`.
+- **2026-11-07: Hosted project settings.** Created with Data API on, "Automatically expose new tables" on (the migration relies on Supabase's default table grants), and automatic RLS on (safety net). **Follow-up:** add explicit `grant`s to a migration so "expose new tables" can be turned off, as Supabase recommends.
 - **Open: email beyond Nisha.** Supabase's built-in email only sends to members
   of the Supabase organization, a few per hour. Fine for single-user MVP; needs
   Google sign-in or SMTP (e.g. Resend) before anyone else joins.
