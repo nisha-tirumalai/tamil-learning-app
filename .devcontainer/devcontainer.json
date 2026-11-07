@@ -3,8 +3,11 @@
 // Keys come from your Codespaces secrets (docs/SUPABASE_SETUP.md), not files.
 {
   "name": "tamil-learning-app",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-24-bookworm",
+  // A plain Debian Linux base, plus Node 24 and Docker added as "features".
+  // (Not a ready-made Node image: there's no typescript-node image tagged 24.)
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "24" },
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
   // The default 2-core / 8 GB machine is enough (bigger ones use up the free
