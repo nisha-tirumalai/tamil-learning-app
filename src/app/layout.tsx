@@ -13,8 +13,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return (
-    <html lang="en">
-      <body>
+    // suppressHydrationWarning: browsers with built-in assistants or extensions add
+    // attributes to <html>/<body> before React loads, which triggers a harmless
+    // "attributes didn't match" warning. This only ignores those two tags.
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         {user && (
           <header className="top">
             <nav>
