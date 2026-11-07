@@ -18,12 +18,15 @@ const emailB = `bala-${run}@test.local`;
 const password = `pw-${run}-${Math.random().toString(36).slice(2)}`;
 
 // A sample row for each per-user table, plus a change to try making to it.
-const TABLES = {
+// Typed loosely on purpose: the Supabase client here has no table types, and
+// exact literal types make its insert() reject the rows at type-check time.
+type Row = Record<string, any>;
+const TABLES: Record<string, { row: Row; change: Row }> = {
   flags: { row: { item_id: "L01-test", english: "You", tanglish: "Nee" }, change: { note: "changed by someone else" } },
   card_state: { row: { item_id: "L01-test", state: { reps: 0 }, due: "2026-01-01T00:00:00+00:00" }, change: { state: { reps: 999 } } },
   review_log: { row: { item_id: "L01-test", rating: 3 }, change: { rating: 1 } },
   daily_activity: { row: { day: "2026-01-01", minutes: 5 }, change: { minutes: 99 } },
-} as const;
+};
 
 describe.skipIf(!configured)("database security (row-level security)", () => {
   let admin: SupabaseClient, alice: SupabaseClient, bala: SupabaseClient, visitor: SupabaseClient;

@@ -19,19 +19,21 @@ decisions. Update it at the end of every phase.
 
 ## Where we are (2026-11-07)
 
-- **Phase 2 (login):** code written (2026-11-04), never run yet. Prepared to run in
-  Codespaces: devcontainer with Docker (for the local test database), app fixes for
-  Codespaces' forwarded URLs, and a setup guide using Codespaces secrets.
-- **Next step, in a codespace:** follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md):
-  `npm install`, `npm test`, `npm run test:db`, fix anything broken, create the real
-  Supabase project, add the secrets, add `nisha.tirumalai@gmail.com` to the
-  allowlist, run `npm run dev`, and log in on the phone. Then commit
-  `package-lock.json` so CI can go green.
-- **Then:** spec for phase 3 (Chat v1) is drafted at
-  [specs/001-chat-v1.md](specs/001-chat-v1.md), **waiting for approval.**
-- **Why Codespaces:** Nisha's laptop blocks npm (TLS handshake failure to
-  registry.npmjs.org) because of a former employer's device management. Claude
-  sessions on the laptop can edit and commit but can't install or run the app.
+- **Phase 2 (login): done.** Running in Codespaces; 18/18 tests pass there
+  (`npm test` + `npm run test:db`); Nisha logged in on her phone through the
+  forwarded port. Real Supabase project created (migration run, allowlist has
+  nisha.tirumalai@gmail.com, Before User Created hook on, URL config set to the
+  codespace address), keys in Codespaces secrets.
+- **CI:** the type-check failed on `tests/rls.test.ts` (literal row types vs the
+  untyped Supabase client); fixed 2026-11-07. Confirm the Actions run is green.
+- **Next:** finish spec 001 (Chat v1): six open questions, then Nisha approves.
+  Phase 3 also needs an Anthropic API key as a Codespaces secret (`ANTHROPIC_API_KEY`).
+- **Small follow-ups:** switch login from a magic link to a 6-digit email code
+  (links only work in the browser that asked for them, and an installed PWA on
+  iPhone has its own storage, so links won't work there); explicit grants (below).
+- **Codespace housekeeping:** stop it when not in use (free hours), and set port
+  3000 back to Private when not testing on the phone. If the codespace is ever
+  recreated, its address changes: update Supabase → Authentication → URL Configuration.
 
 ## Phases (mirrors SCOPING.md §10; SCOPING wins if they differ)
 
@@ -39,7 +41,7 @@ decisions. Update it at the end of every phase.
 |---|---|---|---|
 | 0 | Goals + scoping doc | 🟨 | [SCOPING.md](SCOPING.md) |
 | 1 | Lesson data pipeline | ✅ | (before specs) |
-| 2 | Login + private per-user data | 🟨 code written, being run in Codespaces | (before specs) |
+| 2 | Login + private per-user data | ✅ 2026-11-07 | (before specs) |
 | 3 | **Chat v1:** welcome screen → "who starts?" → correction + score /10 + try again + continue | ⬜ spec drafted | [001](specs/001-chat-v1.md) |
 | 4 | **Rubric + gold set + evals:** 40 scored messages, eval script, compare 2–3 models | ⬜ | |
 | 5 | **Speak:** speech-to-text in, Tamil voice out, 🔊/🔇 toggle, switch Speak ↔ Chat | ⬜ | |
@@ -116,6 +118,7 @@ where `user_id` is you"), tested in `tests/rls.test.ts`.
   codespace), so no `.env.local` is needed. Redirects and server actions use the
   forwarded `*.app.github.dev` address, not `localhost`.
 - **2026-11-07: Hosted project settings.** Created with Data API on, "Automatically expose new tables" on (the migration relies on Supabase's default table grants), and automatic RLS on (safety net). **Follow-up:** add explicit `grant`s to a migration so "expose new tables" can be turned off, as Supabase recommends.
+- **2026-11-07: Stay a PWA** (installable website), not an App Store app. Confirmed by Nisha after seeing it in the browser. Home-screen install comes with deployment (phase 8).
 - **Open: email beyond Nisha.** Supabase's built-in email only sends to members
   of the Supabase organization, a few per hour. Fine for single-user MVP; needs
   Google sign-in or SMTP (e.g. Resend) before anyone else joins.

@@ -374,7 +374,7 @@ I approve the spec, *then* code gets written.
 |---|---|---|---|
 | 0 | Goals + scoping doc (this file) | | 🟨 |
 | 1 | Lesson data pipeline | | ✅ |
-| 2 | Login + private per-user data (already written, needs running) | | 🟨 |
+| 2 | Login + private per-user data | 2026-11-07 | ✅ |
 | 3 | **Chat v1:** welcome screen → "who starts?" → correction + score /10 + try again + continue | | ⬜ |
 | 4 | **Rubric + gold set + evals:** 40 scored messages, eval script, compare 2–3 models | | ⬜ |
 | 5 | **Speak:** speech-to-text in, Tamil voice out, 🔊/🔇 toggle, switch Speak ↔ Chat | | ⬜ |
