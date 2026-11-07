@@ -150,3 +150,32 @@ script appears anywhere.
 3. ~~Daily cap~~ **Decided 2026-11-07:** 60 messages/day (about $0.10/day).
 4. **Rubric examples** haven't been checked by your teacher yet. **Use rubric v1 as
    it is for now; phase 4's gold set is where a fluent speaker checks it.**
+
+## Answers from Nisha (2026-11-07), to fold into the spec once all are in
+
+**Priorities:** accuracy first, fun second. Don't put everything in my face on
+every message.
+
+- **Welcome screen:** Tanglish greeting with the English underneath.
+- **Tutor starts:** it asks me to pick a topic (Day, Food, Work, Family, Weekend)
+  or **Surprise me** (random). Same for Speak and Chat.
+- **Safety:** no violence, harassment, or self-harm/harm to others, for anyone
+  using the app. (How: see below. Still to confirm.)
+- **Example prompts when I start** ("I'm on the bus…"): not in v1. Look at the
+  UI first, then decide.
+- **Correction card, kept light:** a small score on every message; tap it to see
+  the breakdown as a pie. Better way shown in Tanglish; its English only on tap.
+  Mistake types on the card. **Tell me more** opens the why and any other ways to
+  say it. (Exact layout to confirm.)
+- **Perfect message:** a warm, rotating line with emojis, never the same every
+  time (~20 lines). Memes maybe later.
+- **English words are never a mistake** (computer, phone, bus…). Don't push
+  pure-Tamil words nobody says. Remove "English word used" as a mistake type.
+- **Retry:** show both scores (6 → 9). Offer "Want a hint?" before retrying.
+- **Tutor:** calls me by name, sometimes "kanna" for fun. Replies are one sentence.
+  It can teach a new word now and then.
+- **Daily cap message:** "See you tomorrow."
+- **Errors:** friendlier than "Something went wrong" (wording to confirm).
+- **Still open:** rubric (drop "meaning" from the score and show "What I
+  understood" instead?), option A vs B for continue, tutor personality, saved
+  history and delete, past-conversations view.

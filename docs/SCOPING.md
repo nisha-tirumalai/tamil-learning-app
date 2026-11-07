@@ -395,6 +395,8 @@ I approve the spec, *then* code gets written.
 - **Movie / show chat:** tell the tutor what I watched, discuss it in Tanglish, pick up phrases from it
 - **Podcast mode (NotebookLM-style):** short audio episodes in easy Tamil on topics I pick, then a conversation about the episode
 - **Flashcards + spaced repetition** for vocabulary (data pipeline already exists)
+- **New-word dictionary:** words the tutor teaches me are saved to my own dictionary; I can browse it, get tested on it, and have conversations built around my new words so they stick (added 2026-11-07)
+- **Many users: costs + billing:** if lots of people use the app, decide how to cover AI costs, e.g. a paid plan with a higher daily limit (added 2026-11-07)
 
 ---
 
