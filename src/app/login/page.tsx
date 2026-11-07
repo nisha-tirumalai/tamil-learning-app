@@ -12,7 +12,7 @@ export default function LoginPage() {
   // /auth/callback sends you back here with ?error=link if the link didn't work.
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("error") === "link")
-      setError("That sign-in link has expired or was already used. Request a new one.");
+      setError("That sign-in link didn't work. Open it in this same browser (press and hold the link in your email, copy it, and paste it here), or request a new one.");
   }, []);
 
   async function submit(e: React.FormEvent) {
