@@ -43,6 +43,7 @@ Turn loop
       topic: my day, work, food, family, weekend.
 
 **Every turn**
+- [ ] A message that is entirely English gets no score: the card shows the Tanglish way to say it and "Try saying it in Tanglish".
 - [ ] I can send Tanglish, English, or a mix. Tanglish spelling is free-form
       (*kudikkura* / *kudikkuraa*).
 - [ ] The correction card shows: what I said, a better way to say it (Tanglish +
@@ -74,7 +75,7 @@ Turn loop
       it uses Tanglish only.
 - [ ] **Looks wrong?** on a correction card saves a flag (my message, the better
       way, the score, an optional note) that shows up on My flags as "from chat".
-- [ ] **Daily cap:** after ✍️ 60 messages in a day (set in config), I see a friendly
+- [ ] **Daily cap:** after 60 messages in a day (set in config), I see a friendly
       "come back tomorrow" message instead of a call to the model. Usage is counted
       by a database function, so the app doesn't need the Supabase secret key.
 - [ ] If the model is slow (> 15 s) or errors, I see "Something went wrong, tap to
@@ -145,10 +146,7 @@ script appears anywhere.
    written above), or reply automatically while the Try again button stays on the
    card? **Wait for Continue in v1. It matches your flow and keeps the focus on
    correcting yourself.**
-2. **All-English message** ("I'm on the bus coming home"): score it, or just show
-   the Tanglish and ask me to try it myself? **Show the Tanglish way with no
-   score, then prompt "Try saying it in Tanglish". Scoring English as 2/10 would
-   drag the weekly average down for asking.**
-3. **Daily cap:** **60 messages/day** (roughly $0.10/day with Haiku, well under $5/month).
+2. ~~All-English message~~ **Decided 2026-11-07:** no score. Show the Tanglish way and prompt "Try saying it in Tanglish". (You didn't try yet, so it shouldn't count.)
+3. ~~Daily cap~~ **Decided 2026-11-07:** 60 messages/day (about $0.10/day).
 4. **Rubric examples** haven't been checked by your teacher yet. **Use rubric v1 as
    it is for now; phase 4's gold set is where a fluent speaker checks it.**
