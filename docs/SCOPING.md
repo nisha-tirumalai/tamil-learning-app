@@ -68,6 +68,9 @@ Always available
   Switch between Speak ↔ Chat anytime (for when I can't talk out loud)
   "Looks wrong?" flag on any correction
 
+Past chats
+  Scroll back through old conversations; delete any of them
+
 Progress screen
   This week's average score, trend vs. last week, my top 3 recurring mistakes
 ```
@@ -129,24 +132,28 @@ Progress screen
 | Privacy | My conversations are private; no chat text in logs | Keys only in secrets |
 | Availability | Best-effort (free tiers) | |
 
-### 1a. Scoring the learner (rubric v1, ✍️ draft to refine)
+### 1a. Scoring the learner (rubric v2, decided 2026-11-07)
 
 Every message gets a **score out of 10**:
 | Part | Points | Question it answers |
 |---|---|---|
-| **Grammar** | 0–5 | Are verb endings, tense, word order and case endings correct? (*poren* vs *ponen*, *busla* not *bus*) |
-| **Meaning** | 0–3 | Would a fluent speaker understand exactly what I meant? |
-| **Naturalness** | 0–2 | Does it sound like spoken Tamil, not English translated word by word? |
+| **Grammar** | 0–6 | Are verb endings, tense, word order and case endings correct? (*poren* vs *ponen*, *busla* not *bus*) |
+| **Sounds like spoken Tamil** | 0–4 | Family-style instead of textbook, natural phrasing (not word-by-word English), right word choice, right tone for the listener (*nee* / *neenga*) |
 
-Plus a **mistake type** tag for each error (verb tense, verb ending, missing case ending, word order, wrong word, English word used, too formal), which feeds my weak-spots list.
+**Meaning is not scored.** The tutor only sees the sentence, so it can only guess what I meant. Instead the card shows **"I understood: …"** and a **That's not what I meant** button. (v1 had meaning 0–3; removed 2026-11-07.)
+
+**Never a mistake:** Tanglish spelling variants, and English words Tamil speakers really use (bus, phone, computer).
+
+Plus a **mistake type** tag for each error (verb tense, verb ending, missing case ending, word order, wrong word, missing word, too formal, too literal), which feeds my weak-spots list.
 
 **Example:** I want to say *"My day wasn't good because of my manager. He's sitting next to me, so I'll tell you later."*
 - I say: *"En naal nalla illa. Manager paakuraar. Naalaikki pesalaam."*
+- I understood: *"My day wasn't good. The manager is watching. Let's talk tomorrow."*
 - Better: *"Inniki naal sariyaa pogala. Manager pakkathula ukkaandhuttu irukkaaru, appuram solren."*
-- Score: grammar 3/5 · meaning 2/3 · natural 1/2 = **6/10**. *Why:* "naalaikki" means tomorrow (you meant "later," which is *appuram*); "sitting next to me" needs *pakkathula ukkaandhuttu irukkaaru*.
-- Mistake types: wrong word, missing phrase
+- Score: grammar 4/6 · spoken 2/4 = **6/10**. *Why:* "naalaikki" means tomorrow (for "later," say *appuram*); "sitting next to me" is *pakkathula ukkaandhuttu irukkaaru*.
+- Mistake types: wrong word, too literal
 
-✍️ *I said grammar is what I care about most, so it gets half the points. Revisit after a week of real use.* (These Tamil examples should be checked by my teacher.)
+✍️ *Grammar gets the bigger share because it's what I care about most. Revisit after a week of real use.* (These Tamil examples should be checked by my teacher.)
 
 **How progress is shown (MVP):** weekly average score, trend vs. last week, % of messages scoring 9–10, and my top 3 mistake types shrinking over time.
 
@@ -396,7 +403,6 @@ I approve the spec, *then* code gets written.
 - **Podcast mode (NotebookLM-style):** short audio episodes in easy Tamil on topics I pick, then a conversation about the episode
 - **Flashcards + spaced repetition** for vocabulary (data pipeline already exists)
 - **New-word dictionary:** words the tutor teaches me are saved to my own dictionary; I can browse it, get tested on it, and have conversations built around my new words so they stick (added 2026-11-07)
-- **Past conversations view:** scroll back through old chats. Messages are already saved, so it is mostly building the screen; rethink storage and speed at scale before many users join (added 2026-11-07)
 - **Many users: costs + billing:** if lots of people use the app, decide how to cover AI costs, e.g. a paid plan with a higher daily limit (added 2026-11-07)
 
 ---
@@ -439,4 +445,8 @@ It reads this file + the eval results + the `ai_requests` table, so this doc sta
 | 2026-11-06 | Separate "scoring the learner" (rubric) from "evaluating the app" (gold set vs. fluent speaker) | The scorer itself must be tested, or progress numbers mean nothing |
 | 2026-11-06 | Tutor must work without lesson content; lessons are a boost | Content will keep growing from many sources |
 | 2026-11-07 | Tanglish captions always shown with voice + slow/replay buttons added to MVP | ChatGPT voice test: audio-only was too fast to follow, and its transcript was in Tamil script |
+| 2026-11-07 | Rubric v2: meaning removed from the score (shown as "I understood" instead); grammar 6 + sounding natural 4 | The model can only guess intent, so scoring meaning would score a guess |
+| 2026-11-07 | Past chats (view + delete) in the MVP | Seeing old conversations is part of learning; messages are already stored |
+| 2026-11-07 | Amma-style tutor, one-sentence replies; accuracy first, fun second | Feels like real family conversation; keeps each turn light |
+| 2026-11-07 | Stay a PWA, not an App Store app | Free, instant updates, one codebase; enough for chat + speech |
 | 2026-11-07 | Spoken (colloquial) Tamil is the core differentiator | Tamil diglossia: most tools and materials default to formal Tamil, which isn't how families speak |
