@@ -85,7 +85,7 @@ describe.skipIf(!configured)("database security (row-level security)", () => {
       expect(deleted.data ?? []).toEqual([]);
       // …and can't save a row pretending to be Alice. (A different item/day, so
       // the only thing that can stop it is the security rule.)
-      const fake = { ...row, user_id: aliceId, ...("day" in row ? { day: "2026-01-02" } : { item_id: "L01-fake" }) };
+      const fake: Row = { ...row, user_id: aliceId, ...("day" in row ? { day: "2026-01-02" } : { item_id: "L01-fake" }) };
       const faked = await bala.from(table).insert(fake);
       expect(faked.error).not.toBeNull();
 

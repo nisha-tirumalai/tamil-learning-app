@@ -1,185 +1,183 @@
 # 001: Chat v1 (correction, score /10, try again, continue)
 
-**Status:** Draft, waiting for Nisha's approval
+**Status:** Final draft, waiting for Nisha's approval (2026-11-07)
 **Phase:** 3 (SCOPING.md §10)
-**Based on:** SCOPING.md §0 (MVP flow) and §1a (rubric v1)
+**Based on:** SCOPING.md §0 (MVP flow), §1a (rubric v2), and the Q&A of 2026-11-07
+
+**Priorities:** accuracy first, fun second. Don't put everything in my face on every message.
 
 ## Problem + user story
 
 As a heritage speaker who knows roughly *what* I want to say but not *how*, I want
-to **type** a message in Tanglish (English mixed in is fine) and immediately see
-how a native speaker would say it, a score out of 10 with a one-line reason, and a
-chance to try again, before the tutor carries on the conversation. That way every
-message I send is practice with correction, not just chatting.
+to **type** a message in Tanglish (English mixed in is fine) and see how a native
+speaker would say it, with a small score and a chance to try again, before the
+tutor carries on the conversation. That way every message is practice with
+correction, and it still feels like chatting with amma, not taking a test.
 
 ## The flow
 
 ```
-Welcome  "Vanakkam! Inniki enna pannalaam?"
-         [🎤 Speak · coming soon]  [💬 Chat]  [🎮 Game · coming soon]
+Welcome   Vanakkam! Inniki enna pannalaam?
+          What shall we do today?
+          [🎤 Speak · coming soon]  [💬 Chat]  [🎮 Game · coming soon]
+          Past chats ›
    ↓ Chat
-Who starts?  "Yaaru start pannuvaanga?"
-         [I start]  [You start]
+Who starts?   Yaaru start pannuvaanga?  (Who starts?)
+          [I start]  [You start]
+                        ↓
+          Pick a topic: Day · Food · Work · Family · Weekend · 🎲 Surprise me
    ↓
 Turn loop
-  1. I type my message
-  2. Correction card:  You said → Better way (Tanglish + English) → 6/10
-                       grammar 3/5 · meaning 2/3 · natural 1/2
-                       Why: "naalaikki" means tomorrow; for "later" say "appuram".
-                       [🔁 Try again]  [➡️ Continue]  (Looks wrong?)
-  3. Try again → I type it again → new score shown on the same card
-  4. Continue → tutor replies (Tanglish, with the English meaning below), streamed
+  You:   En naal nalla illa.
+
+         Inniki naal sariyaa pogala.          ⭐ 7
+         (tap for the English)                (tap for the pie)
+         I understood: "My day wasn't good."
+         🏷 too literal
+         [Tell me more]  [🔁 Try again]  [➡️ Continue]   Looks wrong?
+
+  Continue → amma replies in one sentence (Tanglish, English below)
 ```
 
 ## Acceptance criteria
 
-**Welcome + who starts**
-- [ ] After login, `/` shows the welcome screen with the greeting in Tanglish and
-      its English meaning. **Chat** works; **Speak** and **Game** are visible but
-      marked "coming soon" and do nothing. (The lesson browser moves to `/lessons`.)
-- [ ] Chat asks "who starts?". **I start** gives me an empty message box.
-      **You start** shows a tutor opening question (Tanglish + English), e.g.
-      *"Inniki naal eppadi irundhuchu?"* (How was your day today?), on an everyday
-      topic: my day, work, food, family, weekend.
+**Welcome and starting**
+- [ ] After login, `/` is the welcome screen: the greeting in Tanglish with the
+      English underneath. **Chat** works; **Speak** and **Game** show "coming soon"
+      and do nothing. A **Past chats** link is visible. The lesson browser moves to `/lessons`.
+- [ ] Chat asks "who starts?". **I start** opens an empty message box (no example
+      prompts in v1). **You start** asks me to pick a topic (Day, Food, Work,
+      Family, Weekend, or 🎲 Surprise me), then the tutor opens with one question
+      on that topic, in Tanglish with the English underneath.
 
-**Every turn**
-- [ ] A message that is entirely English gets no score: the card shows the Tanglish way to say it and "Try saying it in Tanglish".
-- [ ] I can send Tanglish, English, or a mix. Tanglish spelling is free-form
-      (*kudikkura* / *kudikkuraa*).
-- [ ] The correction card shows: what I said, a better way to say it (Tanglish +
-      English meaning), a total score /10 with the three parts (grammar 0–5,
-      meaning 0–3, naturalness 0–2, per rubric v1), a one-line why, and mistake
-      types from the fixed list (verb tense, verb ending, missing case ending, word
-      order, wrong word, English word used, too formal).
-- [ ] The total always equals the sum of the three parts. Every part is a whole
-      number within its range.
-- [ ] **Spelling variants are not mistakes.** A message that is already natural
-      spoken Tamil scores 9–10, and its "better way" is the same sentence (or says
-      "Perfect, no change needed").
-- [ ] **Spoken Tamil is the target.** A correct but formal sentence (*kudikkiraai*)
-      gets the spoken version as the better way and the "too formal" tag.
-- [ ] **Try again** lets me retype. The new attempt is scored the same way, against
-      what I originally meant, and shown on the same card (first score → new score).
-      I can try as many times as I like.
-- [ ] **Continue** (or just typing my next message) brings the tutor's reply. It
-      responds to what I meant, keeps the conversation going, is in spoken-style
-      Tanglish with the English meaning, and is short (1–3 sentences).
-- [ ] The correction appears within **3 seconds** of sending (p50, on phone over
-      Wi-Fi); the tutor reply starts streaming within 3 seconds of tapping Continue.
+**The correction card (every message I send)**
+- [ ] Shows, in this order: the **better way** in Tanglish (its English appears
+      only when I tap it); a **small score ⭐ n/10** (tapping it opens a pie of the
+      two parts); **"I understood: …"**, the tutor's reading of my message in
+      English; and the **mistake types** as small tags.
+- [ ] **That's not what I meant** under "I understood" lets me type what I meant in
+      English; the card then re-does the better way and score for that meaning.
+- [ ] **Tell me more** opens the one-line why and, when there is one, a second way
+      to say it. Nothing else is shown until I tap.
+- [ ] **Score (rubric v2):** grammar 0–6 + sounding like spoken Tamil 0–4 = total
+      0–10. Whole numbers, always within range, and the total always equals the sum.
+      Meaning is **not** scored; it's shown as "I understood".
+- [ ] **Mistake types** come from a fixed list: verb tense, verb ending, missing case
+      ending, word order, wrong word, missing word, too formal, too literal.
+- [ ] **English words are never mistakes** (bus, phone, computer, office…). The
+      better way never swaps in pure-Tamil words people don't actually say.
+- [ ] **Spelling is never a mistake.** *kudikkura* and *kudikkuraa* are both fine.
+- [ ] **Spoken Tamil is the target.** A correct but formal sentence gets the spoken
+      version as the better way and the "too formal" tag.
+- [ ] **Perfect message (10/10):** instead of a correction, a warm line from a
+      rotating set of ~20 with emojis (e.g. *"Semma kanna! 🔥"*), never the same one
+      twice in a row.
+- [ ] **All-English message:** no score. The card shows the Tanglish way to say it
+      and "Try saying it in Tanglish".
+
+**Try again and continue**
+- [ ] **Try again** first offers **"Want a hint?"** (the hint gives one clue, never
+      the full answer). My new attempt is scored against what I originally meant,
+      and the card shows both scores (⭐ 6 → 9). I can retry as often as I like.
+- [ ] The tutor **waits until I tap Continue** (or send a new message) before replying.
+- [ ] **Amma-style tutor:** warm, affectionate and encouraging, like amma on the
+      phone. Uses my name, sometimes *kanna*. Replies are **one sentence** in spoken
+      Tanglish with the English underneath, respond to what I meant, and keep the
+      conversation going. Now and then it slips in a new word with its meaning.
+
+**Past conversations**
+- [ ] **Past chats** lists my conversations, newest first: date, topic (or first
+      message), number of messages, and average score.
+- [ ] Opening one shows the whole conversation, including correction cards
+      (read-only in v1).
+- [ ] **Delete** a conversation (with a "Delete this chat?" confirm step in the page)
+      removes it and its messages and scores for good.
 
 **Rules that always hold**
-- [ ] **No Tamil script ever reaches the screen.** Anything the model returns is
-      checked on the server. If it contains Tamil script, it's retried once, then
-      replaced with a friendly error. It's never shown.
-- [ ] If I ask for Tamil script ("write it in Tamil letters"), the tutor kindly says
-      it uses Tanglish only.
-- [ ] **Looks wrong?** on a correction card saves a flag (my message, the better
-      way, the score, an optional note) that shows up on My flags as "from chat".
-- [ ] **Daily cap:** after 60 messages in a day (set in config), I see a friendly
-      "come back tomorrow" message instead of a call to the model. Usage is counted
-      by a database function, so the app doesn't need the Supabase secret key.
-- [ ] If the model is slow (> 15 s) or errors, I see "Something went wrong, tap to
-      retry", and my message isn't lost.
-- [ ] **Stored privately** (RLS, own rows only): each conversation, every message,
-      every attempt, and each score with its parts, mistake types, prompt version
-      and model. Phase 6 (progress) and phase 4 (evals) need this.
-- [ ] Prompts live in versioned files: `prompts/corrector_scorer_v1.md` and
-      `prompts/tutor_system_v1.md`. The model name, cap and prompt versions are in
-      one config file, not scattered in code.
-- [ ] The Anthropic API key is a Codespaces secret (`ANTHROPIC_API_KEY`), used only
-      on the server.
+- [ ] **No Tamil script ever reaches the screen.** Every model answer is checked on
+      the server. If it contains Tamil letters, it's retried once, then replaced with
+      the friendly error. It's never shown.
+- [ ] Asked for Tamil script, the tutor kindly says it only uses Tanglish.
+- [ ] **Safety:** Claude's built-in safety, plus two lines in the tutor's
+      instructions: steer back to everyday topics if a conversation turns to
+      violence, harassment or sexual content; and if I express thoughts of harming
+      myself or others, step out of the lesson, respond with care, suggest talking to
+      someone and a helpline (988 in the US), and don't score that message.
+- [ ] **Looks wrong?** on a card saves a flag (my message, the better way, the score,
+      an optional note), shown on My flags as "from chat".
+- [ ] **Daily cap:** after 60 messages in a day I see "See you tomorrow" instead of a
+      model call. Counted by a database function, so the app doesn't need the
+      Supabase secret key.
+- [ ] **Errors:** if the model is slow (> 15 s) or fails: *"Aiyo! Something broke on
+      my side 😅 Your message is safe, tap to try again."* My message isn't lost.
+- [ ] **Speed:** the card appears within 3 s of sending (typical, on Wi-Fi); the reply
+      starts within 3 s of tapping Continue.
+- [ ] **Stored privately** (RLS, own rows only): conversations, messages, attempts,
+      and scores with parts, mistake types, prompt version and model.
+- [ ] **Prompts** in versioned files (`prompts/corrector_scorer_v1.md`,
+      `prompts/tutor_system_v1.md`); model name, cap, prompt versions and the
+      praise lines in one config file.
+- [ ] The Anthropic key is a Codespaces secret (`ANTHROPIC_API_KEY`), used only on the server.
 
-## Out of scope (later phases)
+## Out of scope
 
-- Speaking, voice output, 🔊/🔇, slow/replay, captions: **phase 5**
+- Speaking, voice, 🔊/🔇, slow/replay, captions: **phase 5**
 - Weak-spots memory steering conversations, and the progress screen: **phase 6**
-- Gold set, eval script, model comparison: **phase 4** (v1 has only a small smoke eval, below)
-- Using lesson content in the tutor's context (SCOPING §4). The tutor must work without it.
-- `ai_requests` logging and the HQ dashboard: **phase 7**
-- 👍/👎 on tutor replies (SCOPING §6): with phase 7 logging
-- Deploying to Vercel: **phase 8**. v1 runs from Codespaces.
-- Game, flashcards, other users
+- Gold set, eval script, model comparison: **phase 4** (v1 has only the smoke eval below)
+- Continuing an old conversation (past chats are read-only in v1)
+- Example prompts when I start ("I'm on the bus…"): decide after using v1
+- New-word dictionary (Later Ideas); v1 only mentions new words in replies
+- A separate content-moderation filter: before anyone else uses the app
+- Using lesson content in the tutor's context (SCOPING §4)
+- 👍/👎, `ai_requests` logging, HQ dashboard: **phase 7**
+- Memes; deploying to Vercel (**phase 8**); the 6-digit login code (separate small fix)
 
 ## How it's built (short)
 
-- **Two model calls per turn**, matching SCOPING §2's prompts: `corrector_scorer`
-  (returns structured JSON: better version, parts, reason, mistake types) runs
-  first, then `tutor_system` streams the reply. Keeping them separate means the
-  scorer can be evaluated on its own in phase 4.
-- **Model:** Claude Haiku (latest), set in config. Phase 4 compares others.
-- **New tables:** conversations, messages (learner / tutor; an attempt links to the
-  message it retries), and scores. All with RLS, plus a usage-counting function.
-  `flags` gets an optional `message_id` for chat flags.
+- **Two model calls per turn** (SCOPING §2): `corrector_scorer` returns structured
+  JSON (better way, alternative, "I understood", parts, why, mistake types), then
+  on Continue `tutor_system` streams the reply. Separate so phase 4 can evaluate
+  the scorer alone.
+- **Model:** Claude Haiku (latest), set in config.
+- **New tables:** conversations, messages (an attempt links to the message it
+  retries), scores; all RLS. A database function counts usage against the cap.
+  `flags` gets an optional `message_id`. Deleting a conversation cascades.
 
 ## Tests + evals
 
-**Automated (run in CI, no real model calls, no cost):**
-- *Scorer output check:* a well-formed answer is accepted; a total that doesn't add
-  up, a part out of range, or an unknown mistake type is rejected.
-- *Tamil-script guard:* any reply containing Tamil letters is never passed to the
-  screen.
-- *Turn flow with a fake model:* send → correction saved → try again links to the
-  original and is re-scored → continue streams a reply; a model error leaves the
-  message saved and retryable.
-- *Daily cap:* the 61st message is refused with the friendly message; a new day resets.
-- *Privacy (added to `tests/rls.test.ts`):* another user can't see, change, delete or
-  fake my conversations, messages or scores, and can't bump my usage count.
+**Automated (in CI, fake model, no cost):**
+- *Scorer output check:* accepts a well-formed answer; rejects a wrong total, an
+  out-of-range part, or an unknown mistake type.
+- *Tamil-script guard:* nothing with Tamil letters is ever passed to the screen.
+- *Turn flow with a fake model:* send → card saved → try again links to the original
+  and shows both scores → continue streams a reply; "That's not what I meant"
+  re-scores; a model error keeps the message, retryable.
+- *All-English and perfect messages:* no score / praise line, as specified.
+- *Daily cap:* the 61st message gets "See you tomorrow"; a new day resets.
+- *Past chats:* listed newest first; delete removes messages and scores.
+- *Privacy (in `tests/rls.test.ts`):* another user can't see, change, delete or fake
+  my conversations, messages or scores, or bump my usage count.
 
-**Smoke eval (manual, real model, about $0.05):** `npm run eval:smoke` runs ~12
-cases from SCOPING §2's mix: already-correct spoken sentences, the rubric example
-from §1a, a formal sentence, English mixed in, misspelled Tanglish, "write it in
-Tamil script please", and an off-topic message. Each runs 3 times. Targets:
+**Smoke eval (real model, about $0.05, results table shown to Nisha):** ~15 cases ×
+3 runs: already-correct spoken sentences, the §1a example, a formal sentence,
+English words mixed in, misspelled Tanglish, an all-English message, "write it in
+Tamil script please", off-topic, and one safety case. Targets:
 - 100% valid scorer output; 100% no Tamil script
-- Already-correct sentences score 9–10 and aren't "fixed" (all of them)
+- Already-correct sentences score 9–10 and aren't "fixed"
+- English words and spelling variants are never tagged as mistakes
 - Same message → total within ±1 across runs (≥ 90%)
-- The §1a example lands at 5–7
+- The safety case gets a caring reply and no score
 
-Results are saved to `evaluation/results/` so phase 4 has a starting point.
+**Done when (Nisha, on her phone):** I send 10 real messages and the corrections
+feel right; I try again, continue, flag a card, open a past chat, delete one, and
+never see Tamil script.
 
-**Manual check on my phone:** start a chat both ways, send the §1a example, try
-again, continue, flag a correction and find it on My flags, and confirm no Tamil
-script appears anywhere.
+## Decisions log for this spec (2026-11-07)
 
-## Open questions ✍️ (my suggestion in bold)
-
-1. **Try again vs. continue:** should the tutor wait for me to tap Continue (as
-   written above), or reply automatically while the Try again button stays on the
-   card? **Wait for Continue in v1. It matches your flow and keeps the focus on
-   correcting yourself.**
-2. ~~All-English message~~ **Decided 2026-11-07:** no score. Show the Tanglish way and prompt "Try saying it in Tanglish". (You didn't try yet, so it shouldn't count.)
-3. ~~Daily cap~~ **Decided 2026-11-07:** 60 messages/day (about $0.10/day).
-4. **Rubric examples** haven't been checked by your teacher yet. **Use rubric v1 as
-   it is for now; phase 4's gold set is where a fluent speaker checks it.**
-
-## Answers from Nisha (2026-11-07), to fold into the spec once all are in
-
-**Priorities:** accuracy first, fun second. Don't put everything in my face on
-every message.
-
-- **Welcome screen:** Tanglish greeting with the English underneath.
-- **Tutor starts:** it asks me to pick a topic (Day, Food, Work, Family, Weekend)
-  or **Surprise me** (random). Same for Speak and Chat.
-- **Safety:** no violence, harassment, or self-harm/harm to others, for anyone
-  using the app. (How: see below. Still to confirm.)
-- **Example prompts when I start** ("I'm on the bus…"): not in v1. Look at the
-  UI first, then decide.
-- **Correction card, kept light:** a small score on every message; tap it to see
-  the breakdown as a pie. Better way shown in Tanglish; its English only on tap.
-  Mistake types on the card. **Tell me more** opens the why and any other ways to
-  say it. (Exact layout to confirm.)
-- **Perfect message:** a warm, rotating line with emojis, never the same every
-  time (~20 lines). Memes maybe later.
-- **English words are never a mistake** (computer, phone, bus…). Don't push
-  pure-Tamil words nobody says. Remove "English word used" as a mistake type.
-- **Retry:** show both scores (6 → 9). Offer "Want a hint?" before retrying.
-- **Tutor:** calls me by name, sometimes "kanna" for fun. Replies are one sentence.
-  It can teach a new word now and then.
-- **Daily cap message:** "See you tomorrow."
-- **Errors:** friendlier than "Something went wrong" (wording to confirm).
-- **Continue (option A):** after the card, the tutor waits until I tap **Continue**.
-- **Past conversations view:** later (moved to Later Ideas). Messages are still saved in v1.
-- **Error message:** "Aiyo! Something broke on my side 😅 Your message is safe, tap to try again."
-- **Phone check (done when):** I send 10 real messages and the corrections feel right.
-- **Still open:** past conversations in v1 after all? (2026-11-07 message unclear), rubric (drop "meaning" from the score and show "What I
-  understood" instead?), tutor personality, delete button, error wording,
-  safety approach, card layout.
+Meaning out of the score, shown as "I understood" (grammar 6 + natural 4) · Option A
+(wait for Continue) · all-English: no score · cap 60, "See you tomorrow" · amma-style
+tutor, name and sometimes *kanna*, one-sentence replies · past chats with delete in v1
+· Claude's built-in safety + minimal rules for v1 · card layout as sketched · topics
+with Surprise me · retry shows both scores, optional hint · English words never
+mistakes · rotating praise lines · friendly error wording · done = 10 real messages
+feel right.
