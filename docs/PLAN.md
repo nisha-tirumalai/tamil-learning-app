@@ -25,8 +25,8 @@ decisions. Update it at the end of every phase.
   nisha.tirumalai@gmail.com, Before User Created hook on, URL config set to the
   codespace address), keys in Codespaces secrets.
 - **CI:** the type-check failed on `tests/rls.test.ts` (literal row types vs the
-  untyped Supabase client); fixed 2026-11-07. Confirm the Actions run is green.
-- **Next:** finish spec 001 (Chat v1): six open questions, then Nisha approves.
+  untyped Supabase client); fixed 2026-11-07. **CI green** from commit 41b31c4.
+- **Next:** Nisha reviews and approves spec 001 (Chat v1, final draft written 2026-11-07).
   Phase 3 also needs an Anthropic API key as a Codespaces secret (`ANTHROPIC_API_KEY`).
 - **Small follow-ups:** switch login from a magic link to a 6-digit email code
   (links only work in the browser that asked for them, and an installed PWA on
