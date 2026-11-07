@@ -1,0 +1,34 @@
+// GitHub Codespaces setup: a Linux machine in the cloud with Node and Docker.
+// Docker is needed for `npm run test:db`, which starts a throwaway Supabase.
+// Keys come from your Codespaces secrets (docs/SUPABASE_SETUP.md), not files.
+{
+  "name": "tamil-learning-app",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-24-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  // The default 2-core / 8 GB machine is enough (bigger ones use up the free
+  // monthly Codespaces hours faster).
+  "postCreateCommand": "npm install",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "App", "onAutoForward": "notify" },
+    "54321": { "label": "Local test Supabase (API)", "onAutoForward": "silent" },
+    "54322": { "label": "Local test Supabase (database)", "onAutoForward": "silent" }
+  },
+  "secrets": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "description": "Supabase → Project Settings → Data API → Project URL",
+      "documentationUrl": "https://github.com/nisha-tirumalai/tamil-learning-app/blob/main/docs/SUPABASE_SETUP.md"
+    },
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": {
+      "description": "Supabase → Project Settings → API Keys → Publishable key",
+      "documentationUrl": "https://github.com/nisha-tirumalai/tamil-learning-app/blob/main/docs/SUPABASE_SETUP.md"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["vitest.explorer", "anthropic.claude-code"]
+    }
+  }
+}

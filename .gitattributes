@@ -1,0 +1,2 @@
+# Shell scripts run in Codespaces/CI (Linux): always use Linux line endings.
+*.sh text eol=lf

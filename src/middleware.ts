@@ -3,6 +3,7 @@
 // this just gives a friendlier experience.)
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { publicUrl } from "./lib/public-url";
 import { supabaseEnv } from "./lib/supabase/env";
 
 const PUBLIC_PATHS = ["/login", "/auth/"];
@@ -24,10 +25,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
   if (!user && !PUBLIC_PATHS.some((p) => path.startsWith(p))) {
-    const login = request.nextUrl.clone();
-    login.pathname = "/login";
-    login.search = "";
-    return NextResponse.redirect(login);
+    return NextResponse.redirect(publicUrl(request, "/login"));
   }
   return response;
 }

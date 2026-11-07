@@ -1,119 +1,161 @@
-# Setting up Supabase (first time)
+# Running phase 2 (login) in Codespaces
 
-Supabase gives the app three things: **login** (magic-link emails), a
-**database** for each person's private data, and the **rules** that keep that
-data private. Takes about 15 minutes. The free plan is enough.
+You'll get the app running in a codespace (a computer in the cloud that GitHub
+lends you), connect it to a real Supabase project, and log in on your phone.
+About 30 minutes. Everything here is free.
 
-Supabase changes its screens from time to time. If a button has a slightly
-different name, look for the closest match.
+Screens change from time to time. If a button has a slightly different name,
+pick the closest match.
 
-## 1. Create an account
+**Where keys go:** only in **GitHub Codespaces secrets**, never in a file. Your
+repo is public, and secrets are stored by GitHub, encrypted, outside the repo.
 
-1. Go to **https://supabase.com** and click **Start your project**.
-2. Click **Continue with GitHub** and approve. (This only signs you in. It doesn't
-   give Supabase your code.)
-3. If it asks you to create an **organization**: name it anything (e.g. your name),
-   choose **Personal** and the **Free** plan, and click **Create organization**.
+---
 
-## 2. Create the project
+## Part A: Open the codespace and run the tests
 
-1. Click **New project**.
-2. **Project name:** `tamil-learning-app`.
-3. **Database password:** click **Generate a password**, then copy it into your
-   password manager. The app doesn't use it, but you can't see it again later.
-4. **Region:** the one closest to you and your friends.
-5. Click **Create new project** and wait 1–2 minutes until the dashboard appears.
+1. Go to https://github.com/nisha-tirumalai/tamil-learning-app.
+2. Click the green **Code** button → **Codespaces** tab → **Create codespace on main**.
+   (If you already have one, delete it with **⋯ → Delete** and create a fresh
+   one, so it picks up the new setup in `.devcontainer/`.)
+3. Wait for it to finish building (3–5 minutes the first time). It runs
+   `npm install` by itself. That's the step your laptop can't do.
+4. Open the terminal (**☰ menu → Terminal → New Terminal**) and run:
+   ```
+   npm test
+   ```
+   These are the lesson-data tests. They should all pass.
+5. Then run:
+   ```
+   npm run test:db
+   ```
+   This starts a throwaway Supabase inside the codespace (the first time takes a
+   few minutes to download) and runs the database security tests too. It never
+   touches your real project.
+6. If anything fails, start Claude Code in the codespace and paste the error. It
+   will read `CLAUDE.md` and `docs/PLAN.md` to pick up where we left off.
 
-## 3. Create the tables and security rules
+## Part B: Create your real Supabase project
 
-1. In the left sidebar, click **SQL Editor** (the `>_` icon).
-2. Click **+ New query** if an empty editor isn't already open.
-3. In VS Code, open `supabase/migrations/20261104000000_init.sql`, press
-   **Ctrl+A** then **Ctrl+C** to copy it all.
-4. Paste it into the Supabase editor and click **Run** (bottom right, or Ctrl+Enter).
-5. You should see **Success. No rows returned**. If you see a red error instead,
-   copy it and send it to Claude. Don't run the file twice: the second run
-   errors with "already exists", which is harmless but confusing.
+1. Go to **https://supabase.com** → **Start your project** → **Continue with GitHub**
+   → **Authorize**. (This only signs you in; it doesn't give Supabase your code.)
+2. If asked to create an **organization**: any name, **Personal**, **Free** plan →
+   **Create organization**.
+3. Click **New project**:
+   - **Project name:** `tamil-learning-app`
+   - **Database password:** click **Generate a password** and save it in your
+     password manager (the app doesn't use it, but you can't see it again).
+   - **Region:** the closest to you.
+   - Click **Create new project** and wait 1–2 minutes.
 
-## 4. Add yourself to the invite list
+## Part C: Create the tables and security rules
 
-1. In the left sidebar, click **Table Editor**, then the **allowlist** table.
-2. Click **Insert** → **Insert row**.
-3. **email:** your email address, **all lowercase**. **note:** e.g. `me`.
-4. Click **Save**.
+1. Left sidebar → **SQL Editor** (the `>_` icon) → **+ New query** if no empty editor
+   is open.
+2. In the codespace, open `supabase/migrations/20261104000000_init.sql`, then
+   **Ctrl+A**, **Ctrl+C**.
+3. Paste into the Supabase editor and click **Run**.
+4. You should see **Success. No rows returned.** (Don't run it twice. The second
+   run says "already exists", which is harmless but confusing.)
 
-Do the same later for your sister and friends. Only emails in this table can sign up.
+## Part D: Add yourself to the invite list
 
-## 5. Turn on the invite-only check
+1. **SQL Editor** → **+ New query**, paste this, and click **Run**:
+   ```sql
+   insert into public.allowlist (email, note) values ('nisha.tirumalai@gmail.com', 'me');
+   ```
+2. To check: left sidebar → **Table Editor** → **allowlist**. Your email should be
+   there.
 
-This tells Supabase to check the allowlist before creating any account.
+## Part E: Turn on the invite-only check
 
-1. In the left sidebar, click **Authentication**.
-2. Under **Configuration**, click **Auth Hooks** (it may just say **Hooks**).
-3. Click **Add hook** → **Before User Created hook**.
-4. **Hook type:** **Postgres**. **Postgres Schema:** `public`.
-   **Postgres function:** `hook_before_user_created`.
-5. Click **Create hook**.
+1. Left sidebar → **Authentication** → under **Configuration**, **Auth Hooks**
+   (may say **Hooks**).
+2. **Add hook** → **Before User Created hook**.
+3. **Hook type:** Postgres · **Schema:** `public` · **Function:** `hook_before_user_created`.
+4. Click **Create hook**.
 
-## 6. Tell Supabase where the app lives
+## Part F: Store the keys as Codespaces secrets
 
-1. Still under **Authentication**, click **URL Configuration**.
-2. **Site URL:** `http://localhost:3000` → **Save**.
-3. Under **Redirect URLs**, click **Add URL**, enter
-   `http://localhost:3000/auth/callback`, and save.
+1. In Supabase: gear icon (**Project Settings**) at the bottom left →
+   - **Data API** → copy the **Project URL** (`https://xxxx.supabase.co`).
+   - **API Keys** → copy the **Publishable key** (`sb_publishable_…`). If you only
+     see "anon / service_role", copy **anon**.
+   - **Never** copy the **secret** / **service_role** key anywhere. The app doesn't
+     need it, and it bypasses all the security rules.
+2. On GitHub: your profile picture (top right) → **Settings** → left sidebar
+   **Codespaces** → **Secrets** section → **New secret**.
+3. Add two secrets, one at a time:
+   | Name | Value |
+   |---|---|
+   | `NEXT_PUBLIC_SUPABASE_URL` | the Project URL |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | the Publishable key |
 
-(When the app goes on Vercel in a later milestone, we'll add its address here too.)
+   For each one, under **Repository access**, choose
+   `nisha-tirumalai/tamil-learning-app`, then click **Add secret**.
+4. Back in the codespace, a message says your secrets changed. Click
+   **Reload to apply**. (If there's no message: **☰ → View → Command Palette** →
+   type **Codespaces: Rebuild Container**.)
+5. Check that they arrived, in the terminal:
+   ```
+   echo $NEXT_PUBLIC_SUPABASE_URL
+   ```
+   It should print your project URL. (Don't paste the output anywhere public.)
 
-## 7. Copy your keys into `.env.local`
+## Part G: Tell Supabase your codespace's address
 
-1. Click the **gear icon** (**Project Settings**) at the bottom of the left sidebar.
-2. Click **Data API** and copy the **Project URL** (looks like
-   `https://abcdefgh.supabase.co`).
-3. Click **API Keys** and copy the **Publishable key** (starts with
-   `sb_publishable_`). If you only see "anon / service_role" keys, copy the **anon**
-   one; it works the same way.
-   **Don't** copy the **secret** / **service_role** key anywhere. The app doesn't
-   need it, and it skips all the security rules.
-4. In VS Code, right-click `.env.example` → **Copy**, then **Paste** in the same
-   folder and rename the copy to **`.env.local`**.
-5. Paste your two values into `.env.local` and save.
+The sign-in email links back to the app, and Supabase only allows addresses you list.
 
-`.env.local` is in `.gitignore`, so git will never commit it. To double-check,
-run `git status`: `.env.local` must **not** appear in the list.
+1. In the codespace terminal, run:
+   ```
+   echo "https://${CODESPACE_NAME}-3000.app.github.dev"
+   ```
+   and copy what it prints.
+2. In Supabase: **Authentication** → **URL Configuration**:
+   - **Site URL:** paste that address → **Save**.
+   - **Redirect URLs** → **Add URL** → paste the address followed by
+     `/auth/callback` (e.g. `https://…-3000.app.github.dev/auth/callback`) → **Save**.
 
-## 8. Run the app
+(If you ever delete this codespace and make a new one, its address changes, so
+repeat Part G.)
 
-In the VS Code terminal:
+## Part H: Start the app and open it on your phone
 
-```
-npm install
-npm run dev
-```
+1. In the codespace terminal:
+   ```
+   npm run dev
+   ```
+   Wait for **Ready**.
+2. Open the **Ports** tab (next to Terminal). Find port **3000 (App)**,
+   right-click → **Port Visibility** → **Public**.
+   *Why:* a private port only opens after signing in to GitHub in that browser,
+   which gets in the way on a phone. Public is safe enough here because the app
+   itself requires an invite-only login. Set it back to **Private** when you're done.
+3. Copy the **Forwarded Address** (the same address as in Part G) and open it on your
+   phone. Texting or emailing it to yourself is easiest.
+4. On the phone: enter `nisha.tirumalai@gmail.com` → **Email me a sign-in link**.
+5. Open the email **on the same phone** and tap the link.
+   - **iPhone + Gmail app:** the Gmail app opens links in its own browser, which
+     doesn't share Safari's login data, so the link fails. **Long-press the link →
+     Open in Safari** (or whichever browser you used in step 3).
+   - The link only works in the browser that asked for it, and only once.
+6. You should see the Lessons list. 🎉 Try **Looks wrong?** on a card, then **My flags**.
 
-1. Open **http://localhost:3000**. You'll land on the login page.
-2. Enter your email and click **Email me a sign-in link**.
-3. Open the email from Supabase and click the link. You should see the Lessons list.
-4. Open a lesson, tap **Looks wrong?** on any card, add a note, and click **Save flag**.
-5. Click **My flags**: your flag should be there. In Supabase, **Table Editor →
-   flags** shows the same row.
-6. **Invite-only check:** sign out and try a different email that's *not* on the
-   allowlist. You should see "This app is invite-only."
+### If the email doesn't come
+Supabase's built-in email sends only to members of your Supabase organization
+(you are one) and only a few per hour. Wait 10–20 minutes before asking for another.
 
-### About the sign-in emails
-Supabase's built-in email is for testing. It only sends to members of your
-Supabase organization (you), and only a few emails per hour. If an email doesn't
-arrive, wait a while before trying again. Before inviting friends, we'll add
-Google sign-in or a free email service (decision noted in `docs/PLAN.md`).
+### Invite-only check
+Sign out and try a different email. You should see "This app is invite-only."
 
-## 9. Save and push
+## Part I: Save the lock file
 
+`npm install` created `package-lock.json`, which records the exact package
+versions. The GitHub Actions tests need it. In the codespace terminal:
 ```
 git add package-lock.json
 git commit -m "Add package lock file"
 git push
 ```
-
-`package-lock.json` (made by `npm install`) records the exact package versions.
-GitHub Actions needs it to run the tests. After pushing, open the repo on GitHub
-and click the **Actions** tab. You should see a **Tests** run with a green tick
-within about 5 minutes. See [TESTS.md](TESTS.md) for what each test checks.
+Then on GitHub, open the **Actions** tab. The **Tests** run should turn green
+within about 5 minutes.

@@ -3,8 +3,8 @@
 Run them yourself with `npm test`. GitHub Actions runs them on every push: open
 the repo's **Actions** tab to see the results.
 
-On your computer, only the lesson tests run. The database tests skip themselves
-unless a test database is set up, which GitHub Actions does automatically.
+`npm test` runs only the lesson tests. The database tests skip themselves
+unless a test database is set up. `npm run test:db` (in Codespaces) starts one and runs everything, and so does GitHub Actions.
 
 ## Lesson data (`tests/lessons.test.ts`)
 
