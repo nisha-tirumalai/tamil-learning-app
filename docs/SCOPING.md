@@ -401,6 +401,7 @@ I approve the spec, *then* code gets written.
 - **Make your own character:** when other people join, each one designs their own cartoon character for their side of the chat (added 2026-11-09)
 - **Live comic pictures:** the app draws each moment of the conversation (me on the bus, my coworker next to me, Laddu with a speech bubble). Needs an image AI; slower and ~20–40× the cost of a message (added 2026-11-09)
 - **Pick a situation:** choose the scene instead of a random one (added 2026-11-09)
+- **Composite score per user:** one overall number or level (e.g. 7.4/10, or "Level 3: Chatting comfortably") that goes beyond phase 6's weekly average. To decide: what goes in (message scores only, or also practice streaks, new words learned, pronunciation), over what time (all time vs. the last 7/30 days), and how it's shown (number, level, chart over time). Depends on the scorer being checked first (phase 4) (added 2026-11-09)
 - **Content helper agent:** a behind-the-scenes agent that runs about once a week. It looks at my past chats and weak spots, decides what I need practice on, writes new situations and practice sentences aimed at that, checks its own work (no Tamil script, spoken not formal), and saves the good ones for Laddu to use. Consider right after phase 6, once there's weak-spot data to work from. Needs its own quality checks, since nobody reviews its Tamil up front (added 2026-11-09)
 - **Many users: costs + billing:** if lots of people use the app, decide how to cover AI costs, e.g. a paid plan with a higher daily limit (added 2026-11-07)
 
