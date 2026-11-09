@@ -1,8 +1,8 @@
 # 001: Chat v1 (correction, score /10, try again, continue)
 
-**Status:** Final draft, waiting for Nisha's approval (2026-11-07)
+**Status:** Updated draft with Laddu, waiting for Nisha's approval (2026-11-09)
 **Phase:** 3 (SCOPING.md §10)
-**Based on:** SCOPING.md §0 (MVP flow), §1a (rubric v2), and the Q&A of 2026-11-07
+**Based on:** SCOPING.md §0 (MVP flow), §1a (rubric v2), the Q&A of 2026-11-07, and the Laddu brainstorm of 2026-11-09
 
 **Priorities:** accuracy first, fun second. Don't put everything in my face on every message.
 
@@ -12,23 +12,23 @@ As a heritage speaker who knows roughly *what* I want to say but not *how*, I wa
 to **type** a message in Tanglish (English mixed in is fine) and see how a native
 speaker would say it, with a small score and a chance to try again, before the
 tutor carries on the conversation. That way every message is practice with
-correction, and it still feels like chatting with amma, not taking a test.
+correction, and it still feels like chatting with a friend, not taking a test.
+
+**Laddu** 🧸 is the tutor: a cute teddy bear who is my friend. Laddu talks in speech
+bubbles, and my side of the chat shows one fixed cartoon girl (me).
 
 ## The flow
 
 ```
-Welcome   Vanakkam! Inniki enna pannalaam?
-          What shall we do today?
-          [🎤 Speak · coming soon]  [💬 Chat]  [🎮 Game · coming soon]
+Welcome   🧸 Vaanga, Nisha!
+          Come on in, Nisha!
+          [I start]  [Laddu starts]
           Past chats ›
-   ↓ Chat
-Who starts?   Yaaru start pannuvaanga?  (Who starts?)
-          [I start]  [You start]
-                        ↓
-          Pick a topic: Day · Food · Work · Family · Weekend · 🎲 Surprise me
-   ↓
-Turn loop
-  You:   En naal nalla illa.
+   ↓ Laddu starts: Laddu picks a random situation and opens it
+     🧸 "Tea kadaiku vandhuttom! Enna order pannalaam?"
+        (We're at the tea shop! What shall we order?)
+Turn loop      (Laddu's bubbles on the left · 👧 my bubbles on the right)
+  👧 You:  En naal nalla illa.
 
          Inniki naal sariyaa pogala.          ⭐ 7
          (tap for the English)                (tap for the pie)
@@ -36,19 +36,35 @@ Turn loop
          🏷 too literal
          [Tell me more]  [🔁 Try again]  [➡️ Continue]   Looks wrong?
 
-  Continue → amma replies in one sentence (Tanglish, English below)
+  Continue → 🧸 Laddu replies in one sentence (Tanglish, English below)
 ```
 
 ## Acceptance criteria
 
 **Welcome and starting**
-- [ ] After login, `/` is the welcome screen: the greeting in Tanglish with the
-      English underneath. **Chat** works; **Speak** and **Game** show "coming soon"
-      and do nothing. A **Past chats** link is visible. The lesson browser moves to `/lessons`.
-- [ ] Chat asks "who starts?". **I start** opens an empty message box (no example
-      prompts in v1). **You start** asks me to pick a topic (Day, Food, Work,
-      Family, Weekend, or 🎲 Surprise me), then the tutor opens with one question
-      on that topic, in Tanglish with the English underneath.
+- [ ] After login, `/` is the welcome screen: Laddu with *"Vaanga, Nisha!"* in
+      Tanglish and the English underneath (the name comes from my profile), and two
+      buttons: **I start** and **Laddu starts**. A **Past chats** link is visible.
+      No Speak / Chat / Game buttons (voice arrives inside the chat in phase 5). The
+      lesson browser moves to `/lessons`.
+- [ ] **I start** opens the chat with an empty message box (no example prompts in v1).
+- [ ] **Laddu starts** needs no choosing: Laddu picks a **random situation** from a
+      list of ~10 in the config file (never the same as last time), sets the scene
+      in one line and asks the first question, in Tanglish with the English
+      underneath. In a situation, Laddu plays the other person (the tea-shop owner,
+      the auto driver, a friend asking about my day…).
+- [ ] Starter situations: tea shop (chai and coffee), auto ride, telling a friend
+      about my day, grocery shop, ordering food at a restaurant, asking for
+      directions, weekend plans, at the doctor's, a phone call with a relative,
+      shopping for clothes. Nisha can edit the list later.
+
+**Look and feel**
+- [ ] A cute cartoon **Laddu** (teddy bear) appears on the welcome screen and next
+      to each of Laddu's messages, with the words in a **speech bubble** coming from
+      Laddu. My messages are bubbles on the other side, next to one fixed
+      **cartoon girl** (me). No character picking.
+- [ ] v1 drawings are simple vector drawings made in the code (no image service),
+      shown to Nisha for approval, and easy to swap for nicer art later.
 
 **The correction card (every message I send)**
 - [ ] Shows, in this order: the **better way** in Tanglish (its English appears
@@ -69,9 +85,12 @@ Turn loop
 - [ ] **Spelling is never a mistake.** *kudikkura* and *kudikkuraa* are both fine.
 - [ ] **Spoken Tamil is the target.** A correct but formal sentence gets the spoken
       version as the better way and the "too formal" tag.
-- [ ] **Perfect message (10/10):** instead of a correction, a warm line from a
-      rotating set of ~20 with emojis (e.g. *"Semma kanna! 🔥"*), never the same one
-      twice in a row.
+- [ ] **Right tone for who I'm talking to:** with Laddu (a friend), casual *nee* is
+      correct; in a situation where Laddu plays a shopkeeper, driver or elder,
+      polite *neenga* is expected.
+- [ ] **Perfect message (10/10):** instead of a correction, a happy line from Laddu
+      from a rotating set of ~20 with emojis (e.g. *"Semma Nisha! 🔥"*), never the
+      same one twice in a row.
 - [ ] **All-English message:** no score. The card shows the Tanglish way to say it
       and "Try saying it in Tanglish".
 
@@ -80,10 +99,11 @@ Turn loop
       the full answer). My new attempt is scored against what I originally meant,
       and the card shows both scores (⭐ 6 → 9). I can retry as often as I like.
 - [ ] The tutor **waits until I tap Continue** (or send a new message) before replying.
-- [ ] **Amma-style tutor:** warm, affectionate and encouraging, like amma on the
-      phone. Uses my name, sometimes *kanna*. Replies are **one sentence** in spoken
-      Tanglish with the English underneath, respond to what I meant, and keep the
-      conversation going. Now and then it slips in a new word with its meaning.
+- [ ] **Laddu is a friend:** fun, casual and encouraging, like a close friend my age
+      who's excited to hear about my day (a little teasing is fine; never mean). Uses
+      my name. Replies are **one sentence** in casual spoken Tanglish with the English
+      underneath, respond to what I meant, and keep the conversation going. Now and
+      then Laddu slips in a new word with its meaning.
 
 **Past conversations**
 - [ ] **Past chats** lists my conversations, newest first: date, topic (or first
@@ -131,6 +151,9 @@ Turn loop
 - Using lesson content in the tutor's context (SCOPING §4)
 - 👍/👎, `ai_requests` logging, HQ dashboard: **phase 7**
 - Memes; deploying to Vercel (**phase 8**); the 6-digit login code (separate small fix)
+- Making or choosing your own character; different characters per user (Later Ideas)
+- Pictures drawn live for each moment of the chat, e.g. me on the bus (Later Ideas)
+- Picking a situation from a list (v1 is random only)
 
 ## How it's built (short)
 
@@ -149,6 +172,8 @@ Turn loop
 - *Scorer output check:* accepts a well-formed answer; rejects a wrong total, an
   out-of-range part, or an unknown mistake type.
 - *Tamil-script guard:* nothing with Tamil letters is ever passed to the screen.
+- *Laddu starts:* the opener comes from the situation list and is never the
+  same situation twice in a row.
 - *Turn flow with a fake model:* send → card saved → try again links to the original
   and shows both scores → continue streams a reply; "That's not what I meant"
   re-scores; a model error keeps the message, retryable.
@@ -169,14 +194,22 @@ Tamil script please", off-topic, and one safety case. Targets:
 - The safety case gets a caring reply and no score
 
 **Done when (Nisha, on her phone):** I send 10 real messages and the corrections
-feel right; I try again, continue, flag a card, open a past chat, delete one, and
+feel right; Laddu starts a random situation and feels like a friend; I try again, continue, flag a card, open a past chat, delete one, and
 never see Tamil script.
 
-## Decisions log for this spec (2026-11-07)
+## Decisions log for this spec
+
+**2026-11-09:** the tutor is **Laddu** 🧸, a teddy-bear friend (not amma-style) ·
+welcome is "Vaanga, Nisha!" with **I start / Laddu starts** (no Speak/Chat/Game
+buttons) · Laddu starts = a random situation, no choosing · speech bubbles · one
+fixed girl character for me, no character picking · cap stays 60 per person per
+day · voice stays in phase 5 · no agent: a fixed two-step workflow.
+
+**2026-11-07:**
 
 Meaning out of the score, shown as "I understood" (grammar 6 + natural 4) · Option A
-(wait for Continue) · all-English: no score · cap 60, "See you tomorrow" · amma-style
-tutor, name and sometimes *kanna*, one-sentence replies · past chats with delete in v1
+(wait for Continue) · all-English: no score · cap 60, "See you tomorrow" · ~~amma-style
+tutor, name and sometimes *kanna*~~ (now Laddu, a friend), one-sentence replies · past chats with delete in v1
 · Claude's built-in safety + minimal rules for v1 · card layout as sketched · topics
 with Surprise me · retry shows both scores, optional hint · English words never
 mistakes · rotating praise lines · friendly error wording · done = 10 real messages

@@ -44,16 +44,11 @@ I'm also moving from finance toward building things. I already know how to analy
 **One user (me). No friends, leaderboards or games yet.**
 
 ```
-Welcome screen
-  "Vanakkam! Inniki enna pannalaam?"  (What shall we do today?)
-     ├── 🎤 Speak
-     ├── 💬 Chat
-     └── 🎮 Game  (shown as "coming soon")
-
-Speak or Chat
-  "Yaaru start pannuvaanga?"  (Who starts?)
+Welcome screen  (the tutor is Laddu 🧸, a teddy-bear friend)
+  "Vaanga, Nisha!"  (Come on in, Nisha!)
      ├── I start: I have something specific to say ("I'm on the bus coming home from work")
-     └── You start: the tutor asks me something ("Inniki naal eppadi irundhuchu?")
+     └── Laddu starts: Laddu picks a random real-life situation and opens it
+         (tea shop, auto ride, telling a friend about my day…), playing the other person
 
 Every turn
   1. I say or type my message (Tanglish or English mixed in)
@@ -65,7 +60,7 @@ Always available
   🔊 / 🔇 volume toggle: muted = tutor replies as text only (for when I'm in public)
   Tanglish captions ALWAYS shown while the tutor speaks (read along)
   🐢 Slow-down + 🔁 replay buttons on every tutor reply
-  Switch between Speak ↔ Chat anytime (for when I can't talk out loud)
+  Type or speak in the same chat box (🎤 arrives in phase 5)
   "Looks wrong?" flag on any correction
 
 Past chats
@@ -297,7 +292,7 @@ evaluation/
 | Aspect | Approach |
 |---|---|
 | UI framework | Next.js PWA, installable on phones |
-| Key interactions | Welcome → Speak / Chat / Game (soon) → who starts → turn loop (say it → correction + score → try again → reply) → progress screen |
+| Key interactions | Welcome ("Vaanga, Nisha!") → I start / Laddu starts → turn loop (say it → correction + score → try again → reply) → progress screen |
 | Feedback mechanism | "Looks wrong?" flag on any correction; 👍/👎 on tutor replies |
 
 **Infrastructure**
@@ -382,9 +377,9 @@ I approve the spec, *then* code gets written.
 | 0 | Goals + scoping doc (this file) | | 🟨 |
 | 1 | Lesson data pipeline | | ✅ |
 | 2 | Login + private per-user data | 2026-11-07 | ✅ |
-| 3 | **Chat v1:** welcome screen → "who starts?" → correction + score /10 + try again + continue | | ⬜ |
+| 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts (random situation) → correction + score /10 + try again + continue | | ⬜ |
 | 4 | **Rubric + gold set + evals:** 40 scored messages, eval script, compare 2–3 models | | ⬜ |
-| 5 | **Speak:** speech-to-text in, Tamil voice out, 🔊/🔇 toggle, switch Speak ↔ Chat | | ⬜ |
+| 5 | **Speak:** 🎤 in the chat box, Laddu's Tamil voice out, 🔊/🔇 mute button, words always on screen | | ⬜ |
 | 6 | **Memory + progress:** weak-spots list steers conversations; weekly progress screen | | ⬜ |
 | 7 | Logging + Project HQ dashboard | | ⬜ |
 | 8 | Deploy → **MVP live on my phone**; daily use for 2 weeks; weekly error review | | ⬜ |
@@ -403,6 +398,9 @@ I approve the spec, *then* code gets written.
 - **Podcast mode (NotebookLM-style):** short audio episodes in easy Tamil on topics I pick, then a conversation about the episode
 - **Flashcards + spaced repetition** for vocabulary (data pipeline already exists)
 - **New-word dictionary:** words the tutor teaches me are saved to my own dictionary; I can browse it, get tested on it, and have conversations built around my new words so they stick (added 2026-11-07)
+- **Make your own character:** when other people join, each one designs their own cartoon character for their side of the chat (added 2026-11-09)
+- **Live comic pictures:** the app draws each moment of the conversation (me on the bus, my coworker next to me, Laddu with a speech bubble). Needs an image AI; slower and ~20–40× the cost of a message (added 2026-11-09)
+- **Pick a situation:** choose the scene instead of a random one (added 2026-11-09)
 - **Many users: costs + billing:** if lots of people use the app, decide how to cover AI costs, e.g. a paid plan with a higher daily limit (added 2026-11-07)
 
 ---
@@ -448,5 +446,8 @@ It reads this file + the eval results + the `ai_requests` table, so this doc sta
 | 2026-11-07 | Rubric v2: meaning removed from the score (shown as "I understood" instead); grammar 6 + sounding natural 4 | The model can only guess intent, so scoring meaning would score a guess |
 | 2026-11-07 | Past chats (view + delete) in the MVP | Seeing old conversations is part of learning; messages are already stored |
 | 2026-11-07 | Amma-style tutor, one-sentence replies; accuracy first, fun second | Feels like real family conversation; keeps each turn light |
+| 2026-11-09 | The tutor is **Laddu**, a teddy-bear friend (replaces amma-style); speech bubbles; one fixed girl character for me | A character makes it fun and personal; a friend feels relaxed |
+| 2026-11-09 | Welcome = "Vaanga, Nisha!" with I start / Laddu starts; Laddu starts a random real-life situation (role-play) | Situations like ordering chai are real practice; no choosing keeps it light; fewer buttons |
+| 2026-11-09 | No agent: a fixed two-step workflow (correct, then reply) | Faster, cheaper, predictable and testable |
 | 2026-11-07 | Stay a PWA, not an App Store app | Free, instant updates, one codebase; enough for chat + speech |
 | 2026-11-07 | Spoken (colloquial) Tamil is the core differentiator | Tamil diglossia: most tools and materials default to formal Tamil, which isn't how families speak |
