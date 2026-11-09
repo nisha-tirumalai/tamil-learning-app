@@ -26,7 +26,8 @@ decisions. Update it at the end of every phase.
   codespace address), keys in Codespaces secrets.
 - **CI:** the type-check failed on `tests/rls.test.ts` (literal row types vs the
   untyped Supabase client); fixed 2026-11-07. **CI green** from commit 41b31c4.
-- **Next:** Nisha reviews and approves spec 001 (Chat v1, final draft written 2026-11-07).
+- **Next: build phase 3.** Spec 001 (Chat v1 with Laddu 🧸, a teddy-bear friend) approved by Nisha 2026-11-09.
+  Build it in the codespace (npm is blocked on the laptop).
   Phase 3 also needs an Anthropic API key as a Codespaces secret (`ANTHROPIC_API_KEY`).
 - **Small follow-ups:** switch login from a magic link to a 6-digit email code
   (links only work in the browser that asked for them, and an installed PWA on
@@ -42,7 +43,7 @@ decisions. Update it at the end of every phase.
 | 0 | Goals + scoping doc | 🟨 | [SCOPING.md](SCOPING.md) |
 | 1 | Lesson data pipeline | ✅ | (before specs) |
 | 2 | Login + private per-user data | ✅ 2026-11-07 | (before specs) |
-| 3 | **Chat v1:** welcome screen → "who starts?" → correction + score /10 + try again + continue | ⬜ spec drafted | [001](specs/001-chat-v1.md) |
+| 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts → correction + score /10 + try again + continue | 🟨 spec approved 2026-11-09 | [001](specs/001-chat-v1.md) |
 | 4 | **Rubric + gold set + evals:** 40 scored messages, eval script, compare 2–3 models | ⬜ | |
 | 5 | **Speak:** speech-to-text in, Tamil voice out, 🔊/🔇 toggle, switch Speak ↔ Chat | ⬜ | |
 | 6 | **Memory + progress:** weak-spots list steers conversations; weekly progress screen | ⬜ | |

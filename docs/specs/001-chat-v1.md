@@ -1,6 +1,6 @@
 # 001: Chat v1 (correction, score /10, try again, continue)
 
-**Status:** Updated draft with Laddu, waiting for Nisha's approval (2026-11-09)
+**Status:** ✅ Approved by Nisha (2026-11-09)
 **Phase:** 3 (SCOPING.md §10)
 **Based on:** SCOPING.md §0 (MVP flow), §1a (rubric v2), the Q&A of 2026-11-07, and the Laddu brainstorm of 2026-11-09
 
