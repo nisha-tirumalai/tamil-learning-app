@@ -16,6 +16,9 @@ Laddu answers in a natural Tamil voice with his mouth moving, and I still get my
 ⭐ score and correction when I tap for it.
 
 ```
+  (Sketch updated 2026-11-11: the final layout is a side-by-side scene, see
+  "The conversation scene" below.)
+
         ┌───────────────────────────────┐
         │                               │
         │          🧸  (big, full body,  │
@@ -91,18 +94,33 @@ spec. Hearing and voice can come from different services.
 - [ ] **🔇 Mute**: Laddu's replies are text only (for the bus); remembered.
 - [ ] Sound only starts after I've tapped something (phones require this).
 
-**The call screen**
-- [ ] Laddu is **big, full body**, in the middle. While his voice plays, his
+**The conversation scene** (changed 2026-11-11, Nisha's request: "not like texting at all")
+- [ ] The chat is a **scene, not a text-message list**: Laddu and my character
+      (girl or guy) **stand side by side**, full body, facing each other, like
+      two people talking. Laddu on the left, me on the right.
+- [ ] **Speech bubbles come out of our mouths** (comic-style, with a tail
+      pointing at the speaker). Only the **latest line from each of us** is on
+      screen: Laddu's bubble above him, mine above me. When someone speaks, their
+      new bubble pops in and replaces their old one.
+- [ ] My ⭐ chip sits on the corner of my bubble; tapping it opens the card as a
+      panel over the scene (spec 002 contents). Tapping Laddu's bubble shows its
+      English.
+- [ ] **Earlier lines** are one tap away: a small "📜 Earlier" button opens the
+      full conversation as a list (same as Past chats). The scene itself stays clean.
+- [ ] Works on a phone held upright: the two characters fit side by side, and
+      bubbles wrap to a few short lines (Laddu's replies are already 1–2 sentences).
+      If a line is too long for a bubble, the bubble scrolls; text is never cut off.
+- [ ] Typed messages appear in my bubble the same way as spoken ones.
+- [ ] Laddu is **big, full body**. While his voice plays, his
       **mouth moves** (a simple open/close animation that follows the loudness
       of his voice). When he's quiet, he idles (blinks).
 - [ ] **Choose your character** (added 2026-11-11): the first time I sign in,
       I pick **girl** or **guy** (two pictures, tap one). It's saved in my profile
-      and can be changed in settings. That character is smaller, near my bubble,
-      with a few poses (normal, blink, "talking" while I hold 🎤).
+      and can be changed in settings. That character stands next to Laddu in
+      the scene, with a few poses (normal, blink, "talking" while I hold 🎤).
 - [ ] Laddu's poses: mouth closed, mouth open (1–2 shapes), blink, happy,
       thinking. All characters are still images animated by the code (no videos,
       because every reply is new and a video can't be made in 3 seconds).
-- [ ] Earlier messages scroll above, as in spec 002 (English and score on tap).
 - [ ] New drawings (Laddu full body, two or three mouth shapes, and my girl
       character) are shown to me for approval first. **Nisha provides pictures**
       for Laddu's look and for her own character's look (pictures she has the
