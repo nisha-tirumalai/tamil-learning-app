@@ -121,11 +121,24 @@ button.secondary { background: transparent; color: var(--muted); }
 .msg.me .bubble { background: var(--mine); border-bottom-right-radius: 0.25rem; max-width: 80%; }
 .msg.me .earlier { color: var(--muted); text-decoration: line-through; font-size: 0.9rem; }
 
+/* Spec 002: Laddu's bubble is tappable (English on tap); a small ⭐ chip under mine. */
+button.bubble.tappable {
+  margin: 0; color: var(--text); font-weight: 400; text-align: left; padding: 0.6rem 0.9rem; border-radius: 1rem;
+  border-bottom-left-radius: 0.25rem;
+}
+.chip-row { display: flex; justify-content: flex-end; margin: 0.25rem 2.6rem 0 0; }
+.chip {
+  margin: 0; background: var(--laddu); color: var(--text); font-size: 0.85rem; font-weight: 600;
+  padding: 0.15rem 0.65rem; border-radius: 999px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+.chip.pending { color: var(--muted); }
+.chip.failed { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+.nudge-box { background: var(--laddu); color: var(--text); text-align: left; font-weight: 500; }
+
 .correction {
   margin: 0.4rem 0 0 auto; width: min(100%, 32rem);
   background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 0.9rem;
 }
-.correction.care { border-color: var(--spoken); }
 .correction p { margin: 0.35rem 0 0; }
 .correction-top { display: flex; gap: 0.75rem; align-items: flex-start; justify-content: space-between; }
 .correction button { margin-top: 0; }

@@ -1,14 +1,14 @@
 "use client";
-// The card under each of my messages (spec 001): better way (tap for English),
-// ⭐ score (tap for the pie), "I understood", mistake tags, and the buttons.
-// Extra detail stays hidden until I tap.
+// The correction card (specs 001 + 002), opened by tapping the ⭐ chip under one
+// of my messages: better way (tap for English), ⭐ score (tap for the pie),
+// "I understood", mistake tags, and the buttons. Extra detail stays hidden
+// until I tap. Safety messages never get a card (Laddu answers those himself).
 import { useState } from "react";
 import type { Attempt } from "@/lib/chat/turn";
 
 export interface CardActions {
   onRetry: (text: string) => Promise<void>;
   onMeant: (meant: string) => Promise<void>;
-  onContinue: () => void;
   onFlag: (note: string) => Promise<boolean>;
 }
 
@@ -33,7 +33,7 @@ function ScorePie({ grammar, spoken }: { grammar: number; spoken: number }) {
   );
 }
 
-export function CorrectionCard({ attempts, actions, active }: { attempts: Attempt[]; actions?: CardActions; active: boolean }) {
+export function CorrectionCard({ attempts, actions }: { attempts: Attempt[]; actions?: CardActions }) {
   const latest = attempts.at(-1)!;
   const score = latest.score;
   const [showEnglish, setShowEnglish] = useState(false);
@@ -44,7 +44,7 @@ export function CorrectionCard({ attempts, actions, active }: { attempts: Attemp
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [flagged, setFlagged] = useState(false);
-  if (!score) return null;
+  if (!score || score.card.kind === "safety") return null;
   const card = score.card;
   const scored = attempts.map((a) => a.score?.total).filter((t): t is number => typeof t === "number");
 
@@ -60,15 +60,6 @@ export function CorrectionCard({ attempts, actions, active }: { attempts: Attemp
     } finally {
       setBusy(false);
     }
-  }
-
-  if (card.kind === "safety") {
-    return (
-      <div className="correction care">
-        <p>{card.care_message}</p>
-        {active && actions && <div className="card-buttons"><button onClick={actions.onContinue}>➡️ Continue</button></div>}
-      </div>
-    );
   }
 
   return (
@@ -92,7 +83,7 @@ export function CorrectionCard({ attempts, actions, active }: { attempts: Attemp
 
       <p className="understood">
         I understood: “{latest.meant ?? card.understood}”
-        {active && actions && panel !== "meant" && (
+        {actions && panel !== "meant" && (
           <button className="link-button inline" onClick={() => setPanel("meant")}>That's not what I meant</button>
         )}
       </p>
@@ -149,11 +140,8 @@ export function CorrectionCard({ attempts, actions, active }: { attempts: Attemp
 
       <div className="card-buttons">
         {(card.why || card.alternative) && !more && <button className="secondary" onClick={() => setMore(true)}>Tell me more</button>}
-        {active && actions && panel === "none" && (
-          <>
-            <button className="secondary" onClick={() => setPanel("retry")}>🔁 Try again</button>
-            <button onClick={actions.onContinue}>➡️ Continue</button>
-          </>
+        {actions && panel === "none" && (
+          <button className="secondary" onClick={() => setPanel("retry")}>🔁 Try again</button>
         )}
         {actions && (flagged
           ? <span className="flag-saved">Flagged ✓</span>

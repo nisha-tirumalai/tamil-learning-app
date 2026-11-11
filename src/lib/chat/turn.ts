@@ -1,4 +1,4 @@
-// One chat turn, start to finish (spec 001). Every function takes the signed-in
+// One chat turn, start to finish (specs 001 and 002). Every function takes the signed-in
 // user's Supabase client (so row-level security applies) and a model (the real
 // one, or FakeModel in tests).
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -194,7 +194,10 @@ export async function scoreMessage(db: Db, model: ChatModel, messageId: number):
   return { ok: true, messageId, score };
 }
 
-/** I send a message (or a try-again of `retryOf`): save it, then score it. */
+/**
+ * Saves and scores one message, with no reply from Laddu. Used for Try again
+ * (`retryOf` = the message being retried). New messages use sendTurn below.
+ */
 export async function sendMessage(
   db: Db, model: ChatModel,
   input: { conversationId: string; text: string; retryOf?: number | null },
@@ -246,18 +249,39 @@ export function splitReply(raw: string): { text: string; english: string } {
   return { text: lines[0] ?? "", english: lines.slice(1).join(" ").replace(/^\((.*)\)$/, "$1") };
 }
 
-function tutorTurns(rows: MessageRow[]): Turn[] {
+/**
+ * The chat so far, as Laddu sees it. He reads my own words (the latest
+ * attempt), not the scorer's guess (spec 002), so a wrong "I understood"
+ * can't send the chat off track. If I told the app what I meant, he gets that.
+ */
+export function tutorTurns(rows: MessageRow[]): Turn[] {
   const turns: Turn[] = [];
   for (const item of buildThread(rows)) {
-    if (item.type === "laddu") turns.push({ role: "assistant", content: `${item.text}\n${item.english}` });
+    let turn: Turn;
+    if (item.type === "laddu") turn = { role: "assistant", content: `${item.text}\n${item.english}` };
     else {
-      const last = item.attempts.at(-1)!;
-      const meaning = item.attempts.find((a) => a.meant)?.meant ?? item.attempts[0].score?.card.understood;
-      turns.push({ role: "user", content: last.text + (meaning ? `\n(meaning: ${meaning})` : "") });
+      const meant = item.attempts.find((a) => a.meant)?.meant;
+      turn = { role: "user", content: item.attempts.at(-1)!.text + (meant ? `\n(Nisha says she meant: ${meant})` : "") };
     }
+    // Two of my messages in a row (Laddu's reply failed in between): join them.
+    const prev = turns.at(-1);
+    if (prev?.role === turn.role) prev.content += `\n${turn.content}`;
+    else turns.push(turn);
   }
   if (turns[0]?.role !== "user") turns.unshift({ role: "user", content: "(Start the conversation.)" });
   return turns;
+}
+
+/** Who Laddu is in this chat. He stays in that role the whole time (spec 002). */
+export function sceneText(situationKey: string | null, name: string, opening: boolean): string {
+  const situation = findSituation(situationKey);
+  let scene = situation
+    ? `## The scene\n\nRole-play: **${situation.title}**. You are playing **${situation.role}**, talking with ${name}. ` +
+      `Stay in this role for the whole chat and talk the way that person really would, while still being warm and fun. ` +
+      `Only drop the role if ${name} clearly changes the subject.`
+    : `## The scene\n\nYou're just chatting as friends. ${name} started the conversation. Stay her friend the whole time.`;
+  if (opening) scene += ` Open the conversation: set the scene and ask ${name} the first question.`;
+  return scene;
 }
 
 /**
@@ -274,15 +298,7 @@ export async function* replyStream(
   if (opening && !(await useOneMessage(db))) { yield { t: "cap" }; return; }
 
   const name = firstName(displayName);
-  const situation = findSituation(conversation.situation);
-  let scene: string;
-  if (situation) {
-    scene = `Role-play: ${situation.title}. You are playing ${situation.role}, talking with ${name}. Stay in that role and talk the way that person really would, while still being warm and fun.`;
-  } else {
-    scene = `You're just chatting as friends. ${name} started the conversation.`;
-  }
-  if (opening) scene += ` Open the conversation: in one sentence, set the scene and ask ${name} the first question.`;
-  const system = loadPrompt(CHAT_CONFIG.prompts.tutor, { name, scene });
+  const system = loadPrompt(CHAT_CONFIG.prompts.tutor, { name, scene: sceneText(conversation.situation, name, opening) });
   const messages = tutorTurns(rows);
 
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -316,6 +332,56 @@ export async function* replyStream(
   }
   yield { t: "reset" };
   yield { t: "error", message: ERROR_TEXT };
+}
+
+// ─── Sending a message: reply + score at the same time (spec 002) ─────────
+
+export type TurnEvent =
+  | ReplyEvent
+  | { t: "saved"; messageId: number }
+  | { t: "score"; messageId: number; score: Score }
+  | { t: "score_error"; messageId: number };
+
+/**
+ * I send a message: save it (one count against the cap), then ask for Laddu's
+ * reply and the score together. Events come out as soon as either has
+ * something, so neither waits for the other. A failure in one never stops the
+ * other: a failed score → "score_error" (tap to retry); a failed reply →
+ * "error" (tap to retry), and the score still arrives.
+ */
+export async function* sendTurn(
+  db: Db, model: ChatModel, input: { conversationId: string; text: string; displayName: string | null },
+): AsyncGenerator<TurnEvent> {
+  const text = input.text.trim().slice(0, 2000);
+  if (!text) { yield { t: "error", message: "Type a message first." }; return; }
+  if (!(await useOneMessage(db))) { yield { t: "cap" }; return; }
+  const { data, error } = await db.from("messages")
+    .insert({ conversation_id: input.conversationId, role: "me", text })
+    .select("id").single();
+  if (error || !data) { yield { t: "error", message: ERROR_TEXT }; return; }
+  const messageId = data.id as number;
+  yield { t: "saved", messageId };
+
+  // Both jobs push into one queue; this loop hands events out in arrival order.
+  const queue: TurnEvent[] = [];
+  let wake: (() => void) | null = null;
+  let finished = false;
+  const push = (e: TurnEvent) => { queue.push(e); wake?.(); wake = null; };
+
+  const scoring = scoreMessage(db, model, messageId).then(
+    (r) => push(r.ok ? { t: "score", messageId, score: r.score } : { t: "score_error", messageId }),
+    (e) => { console.warn("score failed:", (e as Error).message); push({ t: "score_error", messageId }); },
+  );
+  const replying = (async () => {
+    for await (const e of replyStream(db, model, input.conversationId, input.displayName)) push(e);
+  })().catch((e) => { console.warn("reply failed:", (e as Error).message); push({ t: "error", message: ERROR_TEXT }); });
+  void Promise.all([scoring, replying]).then(() => { finished = true; wake?.(); });
+
+  for (;;) {
+    while (queue.length) yield queue.shift()!;
+    if (finished) return;
+    await new Promise<void>((resolve) => { wake = resolve; });
+  }
 }
 
 // ─── Past chats, flags, delete ─────────────────────────────────────────────

@@ -13,7 +13,8 @@ export const CHAT_CONFIG = {
   timeoutMs: 15_000,
   prompts: {
     corrector: "corrector_scorer_v1",
-    tutor: "tutor_system_v1",
+    /** v2 (spec 002): stays in the scene, ends with a question. v1 is kept for comparison. */
+    tutor: "tutor_system_v2",
   },
 } as const;
 
@@ -74,4 +75,11 @@ export const SITUATIONS: { key: string; title: string; role: string; polite: boo
 export const WELCOME = { tanglish: (name: string) => `Vaanga, ${name}!`, english: (name: string) => `Come on in, ${name}!` };
 
 export const ERROR_TEXT = "Aiyo! Something broke on my side 😅 Your message is safe, tap to try again.";
+/** The small chip under each of my messages (spec 002). */
+export const CHIP_TEXT = {
+  allEnglish: "Try it in Tanglish",
+  failed: "Score didn't load · tap to retry",
+};
+/** Shown when a chat was left with Laddu not having answered yet. */
+export const NUDGE_TEXT = "🧸 Tap here and Laddu will answer.";
 export const CAP_TEXT = "See you tomorrow! 🧸 You've practised a lot today.";

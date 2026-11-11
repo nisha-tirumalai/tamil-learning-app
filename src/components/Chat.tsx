@@ -1,47 +1,52 @@
 "use client";
-// The chat screen: Laddu's bubbles on the left, mine on the right with a
-// correction card under each. Laddu only replies when I tap Continue.
+// The chat screen (spec 002): Laddu's bubbles on the left, mine on the right
+// with a small ⭐ chip under each. When I send, Laddu's reply and my score are
+// worked out at the same time on the server and come back down one stream:
+// his words appear as they're written, and the chip fills in when the score
+// is ready. Neither waits for the other.
 import { useEffect, useRef, useState } from "react";
 import { flag, notWhatIMeant, send, tryScoringAgain } from "@/app/chat/actions";
-import { CAP_TEXT } from "@/lib/chat/config";
-import type { Attempt, CardResult, ReplyEvent, ThreadItem } from "@/lib/chat/turn";
-import { Laddu, Me } from "./Characters";
-import { CorrectionCard } from "./CorrectionCard";
+import { CAP_TEXT, ERROR_TEXT, NUDGE_TEXT } from "@/lib/chat/config";
+import type { Score } from "@/lib/chat/scorer";
+import type { Attempt, CardResult, ThreadItem, TurnEvent } from "@/lib/chat/turn";
+import { LadduBubble, MyTurn } from "./Turns";
 
 type Status =
   | { kind: "idle" }
-  | { kind: "scoring" }
   | { kind: "replying"; raw: string }
   | { kind: "error"; message: string; retry: () => void }
+  | { kind: "nudge" }          // Laddu hasn't answered my last message yet
   | { kind: "cap" };
 
-function LadduBubble({ text, english, typing }: { text: string; english: string; typing?: boolean }) {
-  return (
-    <div className="msg laddu">
-      <Laddu size={40} />
-      <div className="bubble">
-        <p className="tanglish">{text || (typing ? "…" : "")}</p>
-        {english && <p className="english">{english}</p>}
-      </div>
-    </div>
-  );
+/** Reads a stream of one-JSON-per-line events. */
+async function readEvents(response: Response, onEvent: (e: TurnEvent) => void) {
+  if (!response.ok || !response.body) throw new Error(`status ${response.status}`);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines.filter(Boolean)) onEvent(JSON.parse(line) as TurnEvent);
+  }
 }
 
 export function Chat({ conversationId, initial, opener, readOnly = false }: {
   conversationId: string; initial: ThreadItem[]; opener: boolean; readOnly?: boolean;
 }) {
   const [items, setItems] = useState<ThreadItem[]>(initial);
-  const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const [pending, setPending] = useState<ReadonlySet<number>>(new Set());
+  const [status, setStatus] = useState<Status>(() =>
+    !readOnly && initial.at(-1)?.type === "me" ? { kind: "nudge" } : { kind: "idle" });
   const [text, setText] = useState("");
-  // The card waiting for Continue (the last message of mine, if Laddu hasn't answered it).
-  const [awaiting, setAwaiting] = useState<number | null>(() => {
-    const last = initial.at(-1);
-    return last?.type === "me" && last.attempts.at(-1)?.score ? last.id : null;
-  });
   const started = useRef(false);
   const bottom = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [items, status]);
+  // Scroll down for new bubbles, but not when a card higher up changes.
+  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [items.length, status]);
 
   // Laddu starts: ask for the opener once, when the chat is still empty.
   useEffect(() => {
@@ -52,105 +57,131 @@ export function Chat({ conversationId, initial, opener, readOnly = false }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function upsertAttempt(originalId: number | null, attempt: Attempt, replaceId?: number) {
-    setItems((prev) => {
-      if (originalId === null) return [...prev, { type: "me", id: attempt.id, attempts: [attempt] }];
-      return prev.map((item) => item.type === "me" && item.id === originalId
-        ? { ...item, attempts: replaceId !== undefined
-            ? item.attempts.map((a) => (a.id === replaceId ? attempt : a))
-            : [...item.attempts, attempt] }
-        : item);
-    });
+  // ─── Small state helpers ───────────────────────────────────────────────
+  const markPending = (id: number, on: boolean) => setPending((prev) => {
+    const next = new Set(prev);
+    if (on) next.add(id); else next.delete(id);
+    return next;
+  });
+  const updateAttempt = (attemptId: number, change: (a: Attempt) => Attempt) => setItems((prev) =>
+    prev.map((item) => item.type === "me" && item.attempts.some((a) => a.id === attemptId)
+      ? { ...item, attempts: item.attempts.map((a) => (a.id === attemptId ? change(a) : a)) }
+      : item));
+  const setScore = (attemptId: number, score: Score) => updateAttempt(attemptId, (a) => ({ ...a, score }));
+  const removeItem = (id: number) => setItems((prev) => prev.filter((i) => !(i.type === "me" && i.id === id)));
+  const addLaddu = (id: number, tanglish: string, english: string) =>
+    setItems((prev) => [...prev, { type: "laddu", id, text: tanglish, english }]);
+
+  // ─── Sending a message: reply + score together ─────────────────────────
+  async function sendNew(message: string) {
+    const tempId = -Date.now();   // until the server gives the real id
+    setItems((prev) => [...prev, { type: "me", id: tempId, attempts: [{ id: tempId, text: message.trim(), meant: null, score: null }] }]);
+    markPending(tempId, true);
+    setStatus({ kind: "replying", raw: "" });
+
+    let saved: number | null = null;
+    let raw = "";
+    let replyOver = false;
+    const failReply = () => {
+      if (saved === null) {
+        removeItem(tempId);
+        setStatus({ kind: "error", message: ERROR_TEXT, retry: () => void sendNew(message) });
+      } else {
+        setStatus({ kind: "error", message: ERROR_TEXT, retry: () => void reply() });
+      }
+    };
+
+    try {
+      const response = await fetch(`/api/chat/${conversationId}/send`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: message }),
+      });
+      await readEvents(response, (e) => {
+        switch (e.t) {
+          case "saved": {
+            const id = e.messageId;
+            saved = id;
+            setItems((prev) => prev.map((item) => item.type === "me" && item.id === tempId
+              ? { ...item, id, attempts: item.attempts.map((a) => ({ ...a, id })) } : item));
+            setPending((prev) => { const next = new Set(prev); next.delete(tempId); next.add(id); return next; });
+            break;
+          }
+          case "delta": raw += e.text; setStatus({ kind: "replying", raw }); break;
+          case "reset": raw = ""; setStatus({ kind: "replying", raw }); break;
+          case "done": replyOver = true; addLaddu(e.id, e.text, e.english); setStatus({ kind: "idle" }); break;
+          case "error": replyOver = true; failReply(); break;
+          case "cap": replyOver = true; removeItem(tempId); setStatus({ kind: "cap" }); break;
+          case "score": setScore(e.messageId, e.score); markPending(e.messageId, false); break;
+          case "score_error": markPending(e.messageId, false); break;
+        }
+      });
+    } catch (err) {
+      console.warn("send failed:", (err as Error).message);
+    }
+    // Whatever didn't arrive by the end shows as "tap to retry".
+    markPending(tempId, false);
+    if (saved !== null) markPending(saved, false);
+    if (!replyOver) failReply();
   }
 
-  /** Handles a card result; returns true if it worked. */
+  // ─── Laddu's reply on its own (his opener, or tap to retry) ────────────
+  async function reply() {
+    setStatus({ kind: "replying", raw: "" });
+    let raw = "";
+    let over = false;
+    try {
+      const response = await fetch(`/api/chat/${conversationId}/reply`, { method: "POST" });
+      await readEvents(response, (e) => {
+        if (e.t === "delta") { raw += e.text; setStatus({ kind: "replying", raw }); }
+        if (e.t === "reset") { raw = ""; setStatus({ kind: "replying", raw }); }
+        if (e.t === "cap") { over = true; setStatus({ kind: "cap" }); }
+        if (e.t === "error") { over = true; setStatus({ kind: "error", message: e.message, retry: () => void reply() }); }
+        if (e.t === "done") { over = true; addLaddu(e.id, e.text, e.english); setStatus({ kind: "idle" }); }
+      });
+    } catch (err) {
+      console.warn("reply failed:", (err as Error).message);
+    }
+    if (!over) setStatus({ kind: "error", message: ERROR_TEXT, retry: () => void reply() });
+  }
+
+  // ─── From the card ─────────────────────────────────────────────────────
+  /** For card actions: shows the cap or a retryable error; true if it worked. */
   function handle(result: CardResult, retry: () => void): boolean {
-    if (result.ok) { setStatus({ kind: "idle" }); return true; }
+    if (result.ok) return true;
     if (result.reason === "cap") setStatus({ kind: "cap" });
-    else setStatus({ kind: "error", message: result.error, retry });
+    else if (result.messageId === undefined) setStatus({ kind: "error", message: result.error, retry });
     return false;
   }
 
-  async function sendNew(message: string) {
-    setStatus({ kind: "scoring" });
-    setAwaiting(null);   // a new message moves on without Laddu's reply
-    const result = await send(conversationId, message);
-    if (result.messageId !== undefined) {
-      upsertAttempt(null, { id: result.messageId, text: message.trim(), meant: null, score: result.ok ? result.score : null });
-      if (result.ok) setAwaiting(result.messageId);
-    }
-    handle(result, () => (result.messageId !== undefined ? rescoreSaved(result.messageId, result.messageId) : sendNew(message)));
-  }
-
-  async function rescoreSaved(originalId: number, messageId: number) {
-    setStatus({ kind: "scoring" });
+  /** "Score didn't load · tap to retry". */
+  async function rescoreSaved(messageId: number) {
+    markPending(messageId, true);
     const result = await tryScoringAgain(messageId);
-    if (result.ok) {
-      setItems((prev) => prev.map((item) => item.type === "me" && item.id === originalId
-        ? { ...item, attempts: item.attempts.map((a) => (a.id === messageId ? { ...a, score: result.score } : a)) }
-        : item));
-      setAwaiting(originalId);
-    }
-    handle(result, () => rescoreSaved(originalId, messageId));
+    if (result.ok) setScore(messageId, result.score);
+    markPending(messageId, false);
+    handle(result, () => void rescoreSaved(messageId));
   }
 
+  /** Try again: scored against what I first meant; Laddu doesn't reply to it. */
   async function retry(originalId: number, attemptText: string) {
-    setStatus({ kind: "scoring" });
     const result = await send(conversationId, attemptText, originalId);
     if (result.messageId !== undefined) {
-      upsertAttempt(originalId, { id: result.messageId, text: attemptText.trim(), meant: null, score: result.ok ? result.score : null });
-    }
-    handle(result, () => (result.messageId !== undefined ? rescoreSaved(originalId, result.messageId) : retry(originalId, attemptText)));
-  }
-
-  async function meant(originalId: number, messageId: number, meaning: string) {
-    setStatus({ kind: "scoring" });
-    const result = await notWhatIMeant(messageId, meaning);
-    if (result.ok) {
+      const attempt: Attempt = { id: result.messageId, text: attemptText.trim(), meant: null, score: result.ok ? result.score : null };
       setItems((prev) => prev.map((item) => item.type === "me" && item.id === originalId
-        ? { ...item, attempts: item.attempts.map((a) => (a.id === messageId ? { ...a, meant: meaning.trim(), score: result.score } : a)) }
-        : item));
+        ? { ...item, attempts: [...item.attempts, attempt] } : item));
     }
-    handle(result, () => meant(originalId, messageId, meaning));
+    handle(result, () => void retry(originalId, attemptText));
   }
 
-  async function reply() {
-    setAwaiting(null);
-    setStatus({ kind: "replying", raw: "" });
-    let raw = "";
-    try {
-      const response = await fetch(`/api/chat/${conversationId}/reply`, { method: "POST" });
-      if (!response.body) throw new Error("no body");
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines.filter(Boolean)) {
-          const event = JSON.parse(line) as ReplyEvent;
-          if (event.t === "delta") { raw += event.text; setStatus({ kind: "replying", raw }); }
-          if (event.t === "reset") { raw = ""; setStatus({ kind: "replying", raw }); }
-          if (event.t === "cap") { setStatus({ kind: "cap" }); return; }
-          if (event.t === "error") { setStatus({ kind: "error", message: event.message, retry: () => void reply() }); return; }
-          if (event.t === "done") {
-            setItems((prev) => [...prev, { type: "laddu", id: event.id, text: event.text, english: event.english }]);
-            setStatus({ kind: "idle" });
-            return;
-          }
-        }
-      }
-      throw new Error("stream ended early");
-    } catch {
-      setStatus({ kind: "error", message: "Aiyo! Something broke on my side 😅 Tap to try again.", retry: () => void reply() });
-    }
+  async function meant(messageId: number, meaning: string) {
+    markPending(messageId, true);
+    const result = await notWhatIMeant(messageId, meaning);
+    if (result.ok) updateAttempt(messageId, (a) => ({ ...a, meant: meaning.trim(), score: result.score }));
+    markPending(messageId, false);
+    if (!result.ok && result.reason === "cap") setStatus({ kind: "cap" });
+    else if (!result.ok) setStatus({ kind: "error", message: result.error, retry: () => void meant(messageId, meaning) });
   }
 
-  const busy = status.kind === "scoring" || status.kind === "replying";
-  const lastMe = [...items].reverse().find((i) => i.type === "me")?.id;
+  const busy = status.kind === "replying";
 
   return (
     <div className="chat">
@@ -161,35 +192,29 @@ export function Chat({ conversationId, initial, opener, readOnly = false }: {
         {items.map((item) => item.type === "laddu"
           ? <LadduBubble key={`l${item.id}`} text={item.text} english={item.english} />
           : (
-            <div key={`m${item.id}`} className="turn">
-              <div className="msg me">
-                <div className="bubble">
-                  {item.attempts.map((a, i) => (
-                    <p key={a.id} className={i < item.attempts.length - 1 ? "earlier" : ""}>{a.text}</p>
-                  ))}
-                </div>
-                <Me size={36} />
-              </div>
-              <CorrectionCard
-                attempts={item.attempts}
-                active={!readOnly && !busy && awaiting === item.id && item.id === lastMe}
-                actions={readOnly ? undefined : {
-                  onRetry: (t) => retry(item.id, t),
-                  onMeant: (m) => meant(item.id, item.attempts.at(-1)!.id, m),
-                  onContinue: () => void reply(),
-                  onFlag: (note) => flag(item.attempts.at(-1)!.id, note),
-                }}
-              />
-            </div>
+            <MyTurn
+              key={`m${item.id}`}
+              attempts={item.attempts}
+              pending={pending}
+              readOnly={readOnly}
+              onRescore={() => void rescoreSaved(item.attempts.at(-1)!.id)}
+              actions={readOnly || item.id < 0 ? undefined : {
+                onRetry: (t) => retry(item.id, t),
+                onMeant: (m) => meant(item.attempts.at(-1)!.id, m),
+                onFlag: (note) => flag(item.attempts.at(-1)!.id, note),
+              }}
+            />
           ))}
 
-        {status.kind === "scoring" && <p className="muted center">Laddu is checking… 🧸</p>}
         {status.kind === "replying" && (() => {
-          const [first, ...rest] = status.raw.split("\n");
-          return <LadduBubble text={first} english={rest.join(" ").trim()} typing />;
+          const [first] = status.raw.split("\n");
+          return <LadduBubble text={first} english="" typing />;
         })()}
         {status.kind === "error" && (
           <button className="error-box" onClick={status.retry}>{status.message}</button>
+        )}
+        {status.kind === "nudge" && (
+          <button className="nudge-box" onClick={() => void reply()}>{NUDGE_TEXT}</button>
         )}
         {status.kind === "cap" && <LadduBubble text={CAP_TEXT} english="" />}
         <div ref={bottom} />
