@@ -102,7 +102,7 @@ describe.skipIf(!configured)("database security (row-level security)", () => {
   }
 
   test("someone who isn't signed in can't read anything private", async () => {
-    for (const table of [...Object.keys(TABLES), "profiles", "usage_daily", "allowlist"]) {
+    for (const table of [...Object.keys(TABLES), "profiles", "usage_daily", "allowlist", "conversations", "messages", "scores"]) {
       const { data } = await visitor.from(table).select("*");
       expect(data ?? [], table).toEqual([]);
     }
@@ -124,5 +124,85 @@ describe.skipIf(!configured)("database security (row-level security)", () => {
   test("you can't change your own usage counts (so you can't dodge the daily cap)", async () => {
     const { error } = await alice.from("usage_daily").insert({ user_id: aliceId, day: "2026-01-01", chat_messages: 0 });
     expect(error).not.toBeNull();
+  });
+
+  // ─── Chat (spec 001) ─────────────────────────────────────────────────────
+  const card = { better: "Inniki naal sariyaa pogala." };
+  async function aliceChat() {
+    const convo = await alice.from("conversations").insert({ started_by: "me" }).select().single();
+    expect(convo.error).toBeNull();
+    const msg = await alice.from("messages")
+      .insert({ conversation_id: convo.data.id, role: "me", text: "En naal nalla illa." }).select().single();
+    expect(msg.error).toBeNull();
+    const score = await alice.from("scores")
+      .insert({ message_id: msg.data.id, grammar: 4, spoken: 3, total: 7, card, prompt_version: "v1", model: "fake" })
+      .select().single();
+    expect(score.error).toBeNull();
+    return { convoId: convo.data.id as string, msgId: msg.data.id as number, scoreId: score.data.id as number };
+  }
+
+  test("chat: another user can't see, change, delete, or fake your conversations, messages or scores", async () => {
+    const { convoId, msgId } = await aliceChat();
+    for (const [table, key, id] of [["conversations", "id", convoId], ["messages", "id", msgId], ["scores", "message_id", msgId]] as const) {
+      expect((await bala.from(table).select("*").eq(key, id)).data, table).toEqual([]);
+      expect((await bala.from(table).update({ created_at: "2020-01-01T00:00:00Z" }).eq(key, id).select()).data ?? [], table).toEqual([]);
+      expect((await bala.from(table).delete().eq(key, id).select()).data ?? [], table).toEqual([]);
+    }
+    // Bala can't add a message to Alice's conversation, even as himself…
+    expect((await bala.from("messages").insert({ conversation_id: convoId, role: "me", text: "hi" })).error).not.toBeNull();
+    // …or pretend to be Alice…
+    expect((await bala.from("conversations").insert({ user_id: aliceId, started_by: "me" })).error).not.toBeNull();
+    // …or score Alice's message.
+    const fakeScore = await bala.from("scores")
+      .insert({ message_id: msgId, grammar: 0, spoken: 0, total: 0, card, prompt_version: "v1", model: "fake" });
+    expect(fakeScore.error).not.toBeNull();
+
+    // Alice's things are all still there.
+    expect((await admin.from("messages").select("id").eq("conversation_id", convoId)).data).toHaveLength(1);
+    expect((await admin.from("scores").select("id").eq("message_id", msgId)).data).toHaveLength(1);
+  });
+
+  test("chat: a score's total must equal grammar + spoken, within range", async () => {
+    const { msgId } = await aliceChat();
+    const second = await alice.from("messages").insert({
+      conversation_id: (await alice.from("messages").select("conversation_id").eq("id", msgId).single()).data!.conversation_id,
+      role: "me", text: "Naan vandhen.",
+    }).select().single();
+    const bad = await alice.from("scores")
+      .insert({ message_id: second.data!.id, grammar: 6, spoken: 4, total: 9, card, prompt_version: "v1", model: "fake" });
+    expect(bad.error).not.toBeNull();
+    const outOfRange = await alice.from("scores")
+      .insert({ message_id: second.data!.id, grammar: 7, spoken: 3, total: 10, card, prompt_version: "v1", model: "fake" });
+    expect(outOfRange.error).not.toBeNull();
+  });
+
+  test("chat: deleting a conversation deletes its messages and scores for good", async () => {
+    const { convoId, msgId } = await aliceChat();
+    const del = await alice.from("conversations").delete().eq("id", convoId).select();
+    expect(del.data).toHaveLength(1);
+    expect((await admin.from("messages").select("id").eq("conversation_id", convoId)).data).toEqual([]);
+    expect((await admin.from("scores").select("id").eq("message_id", msgId)).data).toEqual([]);
+  });
+
+  test("daily cap: counts your own messages, stops at the cap, and resets on a new day", async () => {
+    // Yesterday was full; that mustn't block today.
+    await admin.from("usage_daily").insert({ user_id: aliceId, day: "2020-01-01", chat_messages: 999 });
+    expect((await alice.rpc("bump_chat_usage", { p_cap: 2 })).data).toBe(1);
+    expect((await alice.rpc("bump_chat_usage", { p_cap: 2 })).data).toBe(2);
+    expect((await alice.rpc("bump_chat_usage", { p_cap: 2 })).data).toBe(-1);   // "See you tomorrow"
+    // Bala's count is separate, and he can't bump Alice's.
+    expect((await bala.rpc("bump_chat_usage", { p_cap: 2 })).data).toBe(1);
+    const rows = await admin.from("usage_daily").select("chat_messages").eq("user_id", aliceId).neq("day", "2020-01-01");
+    expect(rows.data).toEqual([{ chat_messages: 2 }]);
+    // Not signed in: refused.
+    expect((await visitor.rpc("bump_chat_usage", { p_cap: 2 })).error).not.toBeNull();
+  });
+
+  test("a chat flag can link to its message", async () => {
+    const { msgId } = await aliceChat();
+    const flag = await alice.from("flags")
+      .insert({ item_id: `chat-${msgId}`, english: "En naal nalla illa.", tanglish: "Inniki naal sariyaa pogala.", source: "chat", message_id: msgId })
+      .select().single();
+    expect(flag.error).toBeNull();
   });
 });
