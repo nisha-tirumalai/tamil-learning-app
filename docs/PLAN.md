@@ -19,6 +19,11 @@ decisions. Update it at the end of every phase.
 
 ## Where we are (2026-11-11)
 
+- **2026-11-11: Phase 3b (spec 002, Laddu v1.1) built, waiting for Nisha's on-phone check.**
+  All 72 tests pass (`npm run test:db`). Needs Nisha:
+  1. With her OK, run the smoke eval (`npm run eval:smoke`, ~$0.05), then fill in the **In role?** column for Laddu's 6 scene replies, and look at the *samikiren* watch row.
+  2. "Done when": 10 messages on her phone; Laddu answers quickly, the screen feels calm, the ⭐ chips are useful, and he keeps the scene going.
+  Next after that: spec 003 (voice; its draft is in progress).
 - **2026-11-10, first real use:** Laddu works on Nisha's phone (migration run, key added). Feedback: too many words on screen; waiting for the score is slow; Laddu doesn't stay in the scene or keep the chat going; voice is essential; wants Laddu big and talking. → Spec 002 (v1.1) approved 2026-11-10. **Next: build spec 002 in the codespace**, then spec 003 (voice), then go live on Vercel, then the gold set. One scorer miss to flag: "samikiren" (meant *samaikkiren*, cooking) was read as "worship", and the meaning was changed to buying.
 - **Phase 3 (chat v1 with Laddu): built, waiting for Nisha's on-phone check.**
   All 52 tests pass (`npm run test:db`), using a fake model (no key, no cost).
@@ -51,7 +56,7 @@ decisions. Update it at the end of every phase.
 | 1 | Lesson data pipeline | ✅ | (before specs) |
 | 2 | Login + private per-user data | ✅ 2026-11-07 | (before specs) |
 | 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts → correction + score /10 + try again + continue | 🟨 built 2026-11-11, needs key + phone check | [001](specs/001-chat-v1.md) |
-| 3b | **Laddu v1.1:** fewer words, instant reply with tap-to-open score, stays in the scene, stretch questions | 🟨 spec approved 2026-11-10 | [002](specs/002-laddu-v1-1.md) |
+| 3b | **Laddu v1.1:** fewer words, instant reply with tap-to-open score, stays in the scene, stretch questions | 🟨 built 2026-11-11, needs phone check + smoke eval | [002](specs/002-laddu-v1-1.md) |
 | 5 | **Talk to Laddu (voice), moved up:** speak in, Tamil voice out, mute, call-style screen with Laddu talking | ⬜ | 003 (to write) |
 | (8 →) | **Go live on Vercel (moved up):** always-on address, home-screen install, keys in Vercel settings, Supabase URL config | ⬜ | setup walkthrough, no spec |
 | 4 | **Rubric + gold set + evals:** 20→40 scored messages, eval script, compare 2–3 models, one model per job | ⬜ | |
@@ -102,6 +107,27 @@ The MVP is single-user.
 - What counts toward the cap: each scored message (send, try again, "not what I
   meant", tap-to-retry) and Laddu's opener. Continue replies don't.
 - Sending a new message instead of tapping Continue moves on without Laddu's reply.
+
+## Phase 3b: what's built (spec 002)
+- **One request per message:** `/api/chat/[id]/send` → `sendTurn()` in `turn.ts`. It counts the
+  cap once, saves my message (`saved` event), then runs the scorer and Laddu's reply **at the same
+  time** and streams both back as they arrive (`delta`/`done` for the reply, `score`/`score_error`
+  for the score). A failure in one never stops the other. Shared streaming code: `src/lib/chat/stream.ts`.
+- `/api/chat/[id]/reply` is still there for Laddu's opener and "tap to try again" after a failed
+  reply (free, as before). Try again, "That's not what I meant" and "Score didn't load · tap to
+  retry" are still server actions (each counts, as in v1). Laddu doesn't reply to a Try again.
+- **Laddu reads my own words** (`tutorTurns()`), not the scorer's `understood`; only a meaning I
+  typed myself is passed on. Two of my messages in a row (after a failed reply) are joined into one turn.
+- `prompts/tutor_system_v2.md` (config points at it; v1 kept): stays in role, 1–2 sentences, ends
+  with a question or invitation, asks for details, stretches now and then. It handles **safety by
+  itself** (one line in simple English), since it no longer waits for the scorer. The scene text
+  is built by `sceneText()`.
+- **Screen:** `src/components/Turns.tsx` (Laddu's bubble: English on tap; mine: the ⭐ chip, tap to
+  open the card). What the chip says: `chipFor()` in `src/lib/chat/chip.ts`. No Continue button.
+  If a chat is reopened with my message unanswered, "🧸 Tap here and Laddu will answer." A safety
+  message gets no chip; its score row is still saved (kind = safety) for the record.
+- `FakeModel.scoreDelayMs` makes scoring slow in tests. Screen tests (`tests/screen.test.tsx`)
+  render to HTML with `react-dom/server`, no browser library needed.
 
 ## Architecture
 

@@ -48,6 +48,16 @@ then try to break the privacy rules.
 | Tamil-script guard | Finds Tamil letters anywhere in an answer; none in the praise lines, situations or prompts. |
 | Laddu starts | 10 situations; a pick always comes from the list and is never the same as last time. |
 | small helpers | "nisha.tirumalai" becomes "Nisha"; Laddu's reply splits into Tanglish + English; try-agains sit under their original. |
+| what Laddu sees (spec 002) | He reads your own words, not the scorer's guess (unless you said what you meant); in a situation he's told to stay in his role, otherwise to stay your friend; the config uses tutor prompt v2 and v1 is kept. |
+
+## The chat screen (`tests/screen.test.tsx`, no database)
+
+Draws the bubbles as HTML (no browser) and checks what you'd see.
+
+| Test | In plain English |
+|------|------------------|
+| Laddu's bubble | Only the Tanglish until you tap; tapped, the English shows underneath. |
+| the chip under my message | ⭐ 7 with the card closed; tapped, the card opens (better way, I understood, Try again, Looks wrong?, and no Continue). 10/10 shows the praise line; all-English says "Try it in Tanglish"; a safety message gets no chip and no card; "⭐ …" while the score is coming; "Score didn't load · tap to retry" if it failed (nothing in past chats); "⭐ 7 → 9" after a try again. |
 
 ## A whole chat turn (`tests/chat-flow.test.ts`, fake model, needs the test database)
 
@@ -55,7 +65,11 @@ A pretend model gives fixed answers, so these cost nothing and never need the ke
 
 | Test | In plain English |
 |------|------------------|
-| send → card → try again → continue | The card is saved, a retry is scored against what you first meant and shows both scores (6 → 9), and Continue streams Laddu's reply. |
+| send: reply first, score saved, counts once | With a slow scorer, Laddu's reply still arrives first; the score is saved too; the daily count goes up by exactly one; Laddu was given your own words. |
+| a failing scorer | Laddu's reply still arrives, and the score can be retried. |
+| a failing reply | The score still saves, and "tap to try again" gets the reply (without counting again). |
+| try again | Scored against what you first meant, shows both scores (6 → 9), and Laddu doesn't reply to it. |
+| at the cap, sending | "See you tomorrow", nothing saved, no model call. |
 | "That's not what I meant" | The card is redone for the meaning you typed (and replaced, not doubled). |
 | a model error keeps my message | Your message is saved even if the model fails, and "try again" works. |
 | Tamil script is retried once, then never shown | For both the card and Laddu's reply. Nothing with Tamil letters ever leaves the server. |
@@ -68,8 +82,11 @@ A pretend model gives fixed answers, so these cost nothing and never need the ke
 ## Smoke eval (`evaluation/smoke.eval.ts`, REAL model, costs ~$0.05)
 
 Not part of `npm test`. Run it on purpose with `npm run eval:smoke` (needs the
-`ANTHROPIC_API_KEY` secret). 15 messages × 3 runs; saves a results table to
-`evaluation/results/`.
+`ANTHROPIC_API_KEY` secret). 15 messages × 3 runs for the scorer, plus 6
+conversation cases for Laddu (spec 002: does each reply end with a question or
+invitation? any Tamil script?) and the *samikiren* watch case. Saves a results
+table to `evaluation/results/`, with an empty **In role?** column for Nisha to
+fill in with ✅/❌.
 
 ## Type-check (`npm run typecheck`)
 
