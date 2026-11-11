@@ -376,15 +376,18 @@ I approve the spec, *then* code gets written.
 
 ✍️ **YOUR CALL:** set target dates. Status: ⬜ not started · 🟨 in progress · ✅ done
 
+**Order changed 2026-11-10:** after phase 3 comes 3b (Laddu v1.1), then **voice (5) before the gold set (4)**. The numbers stay the same so older docs still make sense.
+
 | Phase | What | Target | Status |
 |---|---|---|---|
 | 0 | Goals + scoping doc (this file) | | 🟨 |
 | 1 | Lesson data pipeline | | ✅ |
 | 2 | Login + private per-user data | 2026-11-07 | ✅ |
-| 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts (random situation) → correction + score /10 + try again + continue | | ⬜ |
-| 4 | **Rubric + gold set + evals:** 40 scored messages, eval script, compare 2–3 models | | ⬜ |
-| 5 | **Speak:** 🎤 in the chat box, Laddu's Tamil voice out, 🔊/🔇 mute button, words always on screen | | ⬜ |
-| 6 | **Memory + progress:** weak-spots list steers conversations; weekly progress screen | | ⬜ |
+| 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts (random situation) → correction + score /10 + try again + continue | 2026-11-11 | 🟨 built, being tried |
+| 3b | **Laddu v1.1:** fewer words on screen (English on tap), Laddu replies right away with the score as a tap-to-open ⭐ chip, Laddu stays in the scene and asks specific questions that stretch me | | ⬜ |
+| 5 | **Talk to Laddu (voice), moved up:** 🎤 speak instead of type, Laddu's Tamil voice out, 🔊/🔇 mute, a call-style screen with Laddu big and his mouth moving while he talks, words on tap | | ⬜ |
+| 4 | **Rubric + gold set + evals:** 20→40 scored messages (from my real chats and flags), eval script, compare 2–3 models, one model per job | | ⬜ |
+| 6 | **Memory + progress:** weak-spots list steers conversations; **vocab list Laddu remembers** (words he taught me come back later until I use them); weekly progress screen | | ⬜ |
 | 7 | Logging + Project HQ dashboard | | ⬜ |
 | 8 | Deploy → **MVP live on my phone**; daily use for 2 weeks; weekly error review | | ⬜ |
 | 9 | Portfolio polish: README, eval results, demo video, write-up | | ⬜ |
@@ -405,6 +408,7 @@ I approve the spec, *then* code gets written.
 - **Make your own character:** when other people join, each one designs their own cartoon character for their side of the chat (added 2026-11-09)
 - **Live comic pictures:** the app draws each moment of the conversation (me on the bus, my coworker next to me, Laddu with a speech bubble). Needs an image AI; slower and ~20–40× the cost of a message (added 2026-11-09)
 - **Pick a situation:** choose the scene instead of a random one (added 2026-11-09)
+- **Stretch mode:** Laddu notices I only say things I already know, and pushes me past my comfort zone: asks for specific details ("how much did it cost? who is it for?"), asks me to try a sentence I haven't attempted, or to use a word he just taught me. A first version goes into 3b (specific questions); the smarter version uses phase 6 memory (added 2026-11-10)
 - **Composite score per user:** one overall number or level (e.g. 7.4/10, or "Level 3: Chatting comfortably") that goes beyond phase 6's weekly average. To decide: what goes in (message scores only, or also practice streaks, new words learned, pronunciation), over what time (all time vs. the last 7/30 days), and how it's shown (number, level, chart over time). Depends on the scorer being checked first (phase 4) (added 2026-11-09)
 - **Content helper agent:** a behind-the-scenes agent that runs about once a week. It looks at my past chats and weak spots, decides what I need practice on, writes new situations and practice sentences aimed at that, checks its own work (no Tamil script, spoken not formal), and saves the good ones for Laddu to use. Consider right after phase 6, once there's weak-spot data to work from. Needs its own quality checks, since nobody reviews its Tamil up front (added 2026-11-09)
 - **Many users: costs + billing:** if lots of people use the app, decide how to cover AI costs, e.g. a paid plan with a higher daily limit (added 2026-11-07)
@@ -455,5 +459,7 @@ It reads this file + the eval results + the `ai_requests` table, so this doc sta
 | 2026-11-09 | The tutor is **Laddu**, a teddy-bear friend (replaces amma-style); speech bubbles; one fixed girl character for me | A character makes it fun and personal; a friend feels relaxed |
 | 2026-11-09 | Welcome = "Vaanga, Nisha!" with I start / Laddu starts; Laddu starts a random real-life situation (role-play) | Situations like ordering chai are real practice; no choosing keeps it light; fewer buttons |
 | 2026-11-09 | No agent: a fixed two-step workflow (correct, then reply) | Faster, cheaper, predictable and testable |
+| 2026-11-10 | Voice (phase 5) moves before the gold set (phase 4); a quick v1.1 (3b) first | After trying v1: typing isn't fun enough, voice is core; the gold set needs real messages that v1 and voice will produce |
+| 2026-11-10 | Laddu replies without waiting for the score; score becomes a tap-to-open chip | Waiting for the score felt slow; the score matters less than the conversation |
 | 2026-11-07 | Stay a PWA, not an App Store app | Free, instant updates, one codebase; enough for chat + speech |
 | 2026-11-07 | Spoken (colloquial) Tamil is the core differentiator | Tamil diglossia: most tools and materials default to formal Tamil, which isn't how families speak |
