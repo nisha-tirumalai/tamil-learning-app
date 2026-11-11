@@ -95,7 +95,13 @@ spec. Hearing and voice can come from different services.
 - [ ] Laddu is **big, full body**, in the middle. While his voice plays, his
       **mouth moves** (a simple open/close animation that follows the loudness
       of his voice). When he's quiet, he idles (blinks).
-- [ ] My girl character is smaller, near my bubble.
+- [ ] **Choose your character** (added 2026-11-11): the first time I sign in,
+      I pick **girl** or **guy** (two pictures, tap one). It's saved in my profile
+      and can be changed in settings. That character is smaller, near my bubble,
+      with a few poses (normal, blink, "talking" while I hold 🎤).
+- [ ] Laddu's poses: mouth closed, mouth open (1–2 shapes), blink, happy,
+      thinking. All characters are still images animated by the code (no videos,
+      because every reply is new and a video can't be made in 3 seconds).
 - [ ] Earlier messages scroll above, as in spec 002 (English and score on tap).
 - [ ] New drawings (Laddu full body, two or three mouth shapes, and my girl
       character) are shown to me for approval first. **Nisha provides pictures**
