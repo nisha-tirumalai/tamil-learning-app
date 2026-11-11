@@ -11,7 +11,10 @@
     "test:db": "bash scripts/test-db.sh",
     "ingest": "node scripts/ingest/ingest.ts",
     "review-export": "node scripts/ingest/review-export.ts",
-    "eval:smoke": "vitest run --config vitest.eval.config.ts"
+    "eval:smoke": "vitest run --config vitest.eval.config.ts",
+    "bakeoff:check": "node evaluation/bakeoff/check.ts",
+    "bakeoff:hearing": "node evaluation/bakeoff/hearing.ts",
+    "bakeoff:voices": "node evaluation/bakeoff/voices.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

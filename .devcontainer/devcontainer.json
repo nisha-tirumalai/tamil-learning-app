@@ -12,7 +12,8 @@
   },
   // The default 2-core / 8 GB machine is enough (bigger ones use up the free
   // monthly Codespaces hours faster).
-  "postCreateCommand": "npm install",
+  // ffmpeg converts audio for the voice bake-off (spec 003).
+  "postCreateCommand": "sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && npm install",
   "forwardPorts": [3000],
   "portsAttributes": {
     "3000": { "label": "App", "onAutoForward": "notify" },
@@ -27,6 +28,22 @@
     "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": {
       "description": "Supabase → Project Settings → API Keys → Publishable key",
       "documentationUrl": "https://github.com/nisha-tirumalai/tamil-learning-app/blob/main/docs/SUPABASE_SETUP.md"
+    },
+    "ELEVENLABS_API_KEY": {
+      "description": "Voice bake-off (optional): ElevenLabs → Developers → API Keys",
+      "documentationUrl": "https://github.com/nisha-tirumalai/tamil-learning-app/blob/main/docs/BAKEOFF_SETUP.md"
+    },
+    "AZURE_SPEECH_KEY": {
+      "description": "Voice bake-off (optional): Azure Speech resource → Keys and Endpoint → KEY 1",
+      "documentationUrl": "https://github.com/nisha-tirumalai/tamil-learning-app/blob/main/docs/BAKEOFF_SETUP.md"
+    },
+    "AZURE_SPEECH_REGION": {
+      "description": "Voice bake-off (optional): the Speech resource's region code, e.g. eastus",
+      "documentationUrl": "https://github.com/nisha-tirumalai/tamil-learning-app/blob/main/docs/BAKEOFF_SETUP.md"
+    },
+    "GOOGLE_SERVICE_ACCOUNT_JSON": {
+      "description": "Voice bake-off (optional): the whole service-account key file (.json), pasted in",
+      "documentationUrl": "https://github.com/nisha-tirumalai/tamil-learning-app/blob/main/docs/BAKEOFF_SETUP.md"
     }
   },
   "customizations": {

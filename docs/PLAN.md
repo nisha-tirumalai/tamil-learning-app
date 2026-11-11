@@ -19,6 +19,10 @@ decisions. Update it at the end of every phase.
 
 ## Where we are (2026-11-11)
 
+- **2026-11-11: Spec 003 (voice) started.**
+  - **Choose your avatar: built.** `profiles.avatar` (null = not chosen; migration `20261112000000_avatar.sql`, **Nisha: paste it into the Supabase SQL Editor and Run**). The home screen sends you to `/choose-avatar` until you pick; `/settings` changes it. `<Me />` draws your avatar via `AvatarContext` (set in the root layout). Uses the old simple drawings until the new ones are approved.
+  - **New drawings: drafts waiting for Nisha's approval** (`src/components/characters/`, not committed yet, not used by the app). Laddu, girl and guy drawn in code with swappable mouth (closed/open/wide) and eyes (open/blink/happy/up), full-body or head crop. Shown to Nisha on a private review page.
+  - **Voice bake-off: built, waiting for keys.** `evaluation/bakeoff/`: `npm run bakeoff:check` (free), `bakeoff:hearing`, `bakeoff:voices`; runs with whichever services have keys (`--only` for one). Setup: [BAKEOFF_SETUP.md](BAKEOFF_SETUP.md). Recordings are converted to WAV with ffmpeg (now in the devcontainer). Scores: a free "sound-alike" character error rate (Tamil script transliterated, Tanglish spelling squashed) plus an optional Claude grader (words wrong, English kept, mistakes "fixed"). Private output in `private/bakeoff/`; summaries in `evaluation/results/bakeoff-*.md`.
 - **2026-11-11: Scorer prompt v3** (`prompts/corrector_scorer_v3.md`, config points at it). Fixes the one smoke-eval miss: when Nisha types what she meant ("That's not what I meant"), her stated meaning now wins over her words (e.g. *naalaikki* → *apram* when she meant "later"). The "keep time words" rule still holds for normal messages. **To do: re-run the smoke eval (`npm run eval:smoke`, ~$0.05) with Nisha's OK**, to confirm the SCOPING 1a "meant later" case passes and nothing else moved.
 - **2026-11-11: Phase 3b (spec 002, Laddu v1.1) built, waiting for Nisha's on-phone check.**
   All 72 tests pass (`npm run test:db`). Needs Nisha:
