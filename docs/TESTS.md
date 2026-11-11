@@ -82,11 +82,17 @@ A pretend model gives fixed answers, so these cost nothing and never need the ke
 ## Smoke eval (`evaluation/smoke.eval.ts`, REAL model, costs ~$0.05)
 
 Not part of `npm test`. Run it on purpose with `npm run eval:smoke` (needs the
-`ANTHROPIC_API_KEY` secret). 15 messages × 3 runs for the scorer, plus 6
+`ANTHROPIC_API_KEY` secret). 16 messages × 3 runs for the scorer, plus 6
 conversation cases for Laddu (spec 002: does each reply end with a question or
 invitation? any Tamil script?) and the *samikiren* watch case. Saves a results
 table to `evaluation/results/`, with an empty **In role?** column for Nisha to
 fill in with ✅/❌.
+
+The SCOPING §1a sentence (*"…Naalaikki pesalaam."*) is tested twice: without my
+meaning, the better way must keep *naalaikki* (it's a correct sentence, the scorer
+can't know I meant "later"); with my meaning "later" (the "That's not what I
+meant" path), the better way must use *appuram*. For an already-correct sentence
+that scores 10, the better way must be my sentence exactly (the app enforces this).
 
 ## Type-check (`npm run typecheck`)
 

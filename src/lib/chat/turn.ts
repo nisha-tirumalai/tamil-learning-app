@@ -135,12 +135,19 @@ export function scorerMessage(text: string, intended: string | null): string {
   return `Nisha's message: ${text}` + (intended ? `\nIntended meaning (from Nisha): ${intended}` : "");
 }
 
-/** Asks, checks, and asks once more if the answer was unusable (e.g. Tamil script). null = give up. */
-export async function askScorer(model: ChatModel, system: string, message: string): Promise<ScorerOutput | null> {
+/**
+ * Asks, checks, and asks once more if the answer was unusable (e.g. Tamil script). null = give up.
+ * A 10/10 sentence needs no fix, so its "better way" is always my own words, exactly.
+ */
+export async function askScorer(model: ChatModel, system: string, text: string, intended: string | null): Promise<ScorerOutput | null> {
+  const message = scorerMessage(text, intended);
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const checked = checkScorerOutput(await model.score({ system, message }));
-      if (checked.ok) return checked.value;
+      if (checked.ok) {
+        const v = checked.value;
+        return v.kind === "scored" && v.total === 10 ? { ...v, better: text.trim() } : v;
+      }
       console.warn(`corrector_scorer answer rejected: ${checked.problem}`);
     } catch (e) {
       console.warn("corrector_scorer call failed:", (e as Error).message);
@@ -169,9 +176,7 @@ export async function scoreMessage(db: Db, model: ChatModel, messageId: number):
   }
 
   const system = scorerPrompt(conversation.situation, contextText(rows, msg.id, conversation.situation));
-  const message = scorerMessage(msg.text, intended);
-
-  const value = await askScorer(model, system, message);
+  const value = await askScorer(model, system, msg.text, intended);
   if (!value) return { ok: false, messageId, reason: "error", error: ERROR_TEXT };
 
   // Praise line: never the same as the last one in this conversation.

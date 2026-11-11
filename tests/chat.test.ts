@@ -1,11 +1,11 @@
 // Chat building blocks (spec 001), no database or model needed.
 import { describe, expect, test } from "vitest";
 import { CHAT_CONFIG, MISTAKE_TYPES, PRAISE_LINES, SITUATIONS } from "@/lib/chat/config";
-import { loadPrompt } from "@/lib/chat/model";
+import { FakeModel, loadPrompt } from "@/lib/chat/model";
 import { firstName, pickPraise, pickSituation } from "@/lib/chat/pick";
 import { checkScorerOutput, toScore } from "@/lib/chat/scorer";
 import { hasTamilScript } from "@/lib/chat/tamil";
-import { buildThread, sceneText, splitReply, tutorTurns, type MessageRow } from "@/lib/chat/turn";
+import { askScorer, buildThread, sceneText, splitReply, tutorTurns, type MessageRow } from "@/lib/chat/turn";
 import { goodAnswer } from "./fixtures";
 
 
@@ -50,6 +50,15 @@ describe("perfect and all-English cards", () => {
     const score = toScore(perfect as never, PRAISE_LINES[0]);
     expect(score.card.praise).toEqual(PRAISE_LINES[0]);
     expect(score.mistake_types).toEqual([]);
+  });
+  test("10/10 keeps my sentence exactly as the better way", async () => {
+    const perfect = { ...goodAnswer, grammar: 6, spoken: 4, total: 10, mistakes: [], mistake_types: [], better: "Naan kadaikkuporen." };
+    const out = await askScorer(new FakeModel([perfect]), "system", " Naan kadaikku poren. ", null);
+    expect(out?.better).toBe("Naan kadaikku poren.");
+  });
+  test("below 10 keeps the scorer's better way", async () => {
+    const out = await askScorer(new FakeModel([goodAnswer]), "system", "En naal nalla illa.", null);
+    expect(out?.better).toBe(goodAnswer.better);
   });
   test("below 10 shows no praise", () => {
     expect(toScore(goodAnswer as never, PRAISE_LINES[0]).card.praise).toBeNull();

@@ -1,4 +1,4 @@
-// Smoke eval for specs 001 + 002: ~15 messages × 3 runs against the scorer,
+// Smoke eval for specs 001 + 002: 16 messages × 3 runs against the scorer,
 // plus 6 conversation cases for Laddu, all with the REAL model (about $0.05). Run with `npm run eval:smoke` (needs ANTHROPIC_API_KEY).
 // Prints a results table and saves it to evaluation/results/.
 // The Tamil in these cases should be checked by a fluent speaker.
@@ -8,10 +8,19 @@ import { CHAT_CONFIG } from "@/lib/chat/config";
 import { anthropicModel, loadPrompt } from "@/lib/chat/model";
 import type { ScorerOutput } from "@/lib/chat/scorer";
 import { hasTamilScript } from "@/lib/chat/tamil";
-import { askScorer, sceneText, scorerMessage, scorerPrompt, splitReply } from "@/lib/chat/turn";
+import { askScorer, sceneText, scorerPrompt, splitReply } from "@/lib/chat/turn";
 
 type Expect = "correct" | "fix" | "all_english" | "safety" | "any";
-const CASES: { text: string; expect: Expect; note: string; situation?: string; tag?: string }[] = [
+/** The meaning I gave in SCOPING §1a, sent the way "That's not what I meant" sends it. */
+const MEANT_LATER = "My day wasn't good because of my manager. He's sitting next to me, so I'll tell you later.";
+
+const CASES: {
+  text: string; expect: Expect; note: string; situation?: string; tag?: string;
+  /** What I meant (the "That's not what I meant" path). */
+  meant?: string;
+  /** The better way must contain this (any spelling). */
+  betterHas?: { re: RegExp; word: string };
+}[] = [
   { text: "Naan office-ku poren.", expect: "correct", note: "already correct" },
   { text: "Inniki romba busy-aa irundhuchu.", expect: "correct", note: "already correct" },
   { text: "Nee saaptiya?", expect: "correct", note: "nee to a friend is right" },
@@ -19,7 +28,9 @@ const CASES: { text: string; expect: Expect; note: string; situation?: string; t
   { text: "Nan coffee kudikren.", expect: "correct", note: "spelling variant" },
   { text: "Naa bussla veetuku poren.", expect: "correct", note: "spelling variants" },
   { text: "Naan bus-la office-ku poren, phone-la charge illa.", expect: "correct", note: "English words mixed in" },
-  { text: "En naal nalla illa. Manager paakuraar. Naalaikki pesalaam.", expect: "fix", note: "SCOPING §1a example" },
+  // "Naalaikki pesalaam" is a fine sentence: without my meaning, keeping "naalaikki" is right.
+  { text: "En naal nalla illa. Manager paakuraar. Naalaikki pesalaam.", expect: "any", note: "SCOPING §1a, no meaning given: keeps naalaikki", betterHas: { re: /naa?lai?k/i, word: "naalaikki" } },
+  { text: "En naal nalla illa. Manager paakuraar. Naalaikki pesalaam.", expect: "fix", note: "SCOPING §1a, I meant \"later\"", meant: MEANT_LATER, betterHas: { re: /\bapp?u?r[ao]m\b/i, word: "appuram" } },
   { text: "Naan veettukku pogiren.", expect: "fix", note: "formal", tag: "too formal" },
   { text: "Naethu naan cinema-ku poren.", expect: "fix", note: "wrong tense", tag: "verb tense" },
   { text: "Naan amma pesuren.", expect: "fix", note: "missing -kitta" },
@@ -58,7 +69,7 @@ test("smoke eval (real model)", async () => {
   for (const c of CASES) {
     const system = scorerPrompt(c.situation ?? null, "(This is the first message.)");
     const outs: (ScorerOutput | null)[] = [];
-    for (let i = 0; i < RUNS; i++) { calls++; outs.push(await askScorer(model, system, scorerMessage(c.text, null))); }
+    for (let i = 0; i < RUNS; i++) { calls++; outs.push(await askScorer(model, system, c.text, c.meant ?? null)); }
     const ok = outs.filter((o): o is ScorerOutput => o !== null);
     valid += ok.length;
     const totals = ok.map((o) => o.total).filter((t): t is number => t !== null);
@@ -72,14 +83,17 @@ test("smoke eval (real model)", async () => {
       if (c.expect === "all_english" && o.kind !== "all_english") problems.push(`kind ${o.kind}`);
       if (c.expect === "safety" && (o.kind !== "safety" || o.total !== null)) problems.push(`kind ${o.kind}`);
       if (c.tag && !o.mistake_types.includes(c.tag as never)) problems.push(`no "${c.tag}" tag`);
+      if (c.betterHas && !c.betterHas.re.test(o.better)) problems.push(`better way has no "${c.betterHas.word}"`);
+      // An already-correct sentence: the better way is my sentence, exactly.
+      if (c.expect === "correct" && o.total === 10 && o.better !== c.text.trim()) problems.push("better way changed my words");
     }
     if (problems.length) failures.push(`${c.text}: ${[...new Set(problems)].join(", ")}`);
     const first = ok[0];
-    rows.push(`| ${c.text} | ${c.note} | ${totals.join(", ") || first?.kind || "-"} | ${first?.better ?? "-"} | ${[...new Set(ok.flatMap((o) => o.mistake_types))].join(", ") || "-"} | ${problems.length ? "❌ " + [...new Set(problems)].join("; ") : "✅"} |`);
+    rows.push(`| ${c.text} | ${c.note}${c.meant ? ` (meant: "${c.meant}")` : ""} | ${totals.join(", ") || first?.kind || "-"} | ${first?.better ?? "-"} | ${[...new Set(ok.flatMap((o) => o.mistake_types))].join(", ") || "-"} | ${problems.length ? "❌ " + [...new Set(problems)].join("; ") : "✅"} |`);
   }
 
   // Watch case: just record what the scorer understood.
-  const watch = await askScorer(model, scorerPrompt(WATCH.situation, "Situation: At the grocery shop."), scorerMessage(WATCH.text, null));
+  const watch = await askScorer(model, scorerPrompt(WATCH.situation, "Situation: At the grocery shop."), WATCH.text, null);
   rows.push(`| ${WATCH.text} | watch: what did it understand? | ${watch?.total ?? watch?.kind ?? "-"} | ${watch?.better ?? "-"} | I understood: "${watch?.understood ?? "-"}" | 👀 Nisha to check |`);
 
   // Laddu: asked for Tamil script, and the safety case. No Tamil script ever.
