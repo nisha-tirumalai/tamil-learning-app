@@ -242,6 +242,10 @@ evaluation/
 
 **Model routing:** not planned for MVP. Maybe later: cheap model for chat, stronger model for memory summaries.
 
+**One job, one model (decided 2026-11-10, build in phase 4):** the jobs are different, so each gets its own model setting in the config: **score** (and re-score), **hint**, **reply**, **opener**. Scoring is the hard job (needs real Tamil knowledge and consistency), so it may need a stronger model; replies and openers are easy, so they stay on the cheapest, fastest one. Every AI call also records its **task** name with the model and prompt version, so phase 4 can compare models per job. v1 uses one model (Haiku) for everything. Scoring stays one call (understand + correct + score together) for speed and cost; phase 4 can test splitting it as an experiment.
+
+**OpenRouter (consider in phase 4):** one key and one bill for models from many providers (Claude, OpenAI, Google…), which makes comparing the OpenAI/Gemini candidate above easier. Trade-offs: a small fee on top of model prices, one more company your messages pass through, and another account. v1 stays on Anthropic directly.
+
 **Checklist**
 - [ ] Tested 2–3 models on my test set
 - [ ] Compared quality, cost and latency in a table
