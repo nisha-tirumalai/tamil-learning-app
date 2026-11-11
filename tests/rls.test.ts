@@ -121,6 +121,14 @@ describe.skipIf(!configured)("database security (row-level security)", () => {
     expect(check.data!.is_admin).toBe(false);
   });
 
+  test("avatar (spec 003): empty at first, you can pick girl or guy, nothing else, and only your own", async () => {
+    expect((await alice.from("profiles").select("avatar").eq("id", aliceId).single()).data!.avatar).toBeNull();
+    expect((await alice.from("profiles").update({ avatar: "guy" }).eq("id", aliceId).select("avatar")).data).toEqual([{ avatar: "guy" }]);
+    expect((await alice.from("profiles").update({ avatar: "cat" }).eq("id", aliceId)).error).not.toBeNull();
+    await alice.from("profiles").update({ avatar: "girl" }).eq("id", balaId);
+    expect((await admin.from("profiles").select("avatar").eq("id", balaId).single()).data!.avatar).toBeNull();
+  });
+
   test("you can't change your own usage counts (so you can't dodge the daily cap)", async () => {
     const { error } = await alice.from("usage_daily").insert({ user_id: aliceId, day: "2026-01-01", chat_messages: 0 });
     expect(error).not.toBeNull();

@@ -1,5 +1,6 @@
 // Welcome (spec 001): Laddu says hello, and I choose who starts.
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Laddu } from "@/components/Characters";
 import { WELCOME } from "@/lib/chat/config";
 import { firstName } from "@/lib/chat/pick";
@@ -9,7 +10,9 @@ import { start } from "./chat/actions";
 export default async function Welcome() {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
-  const { data: profile } = await db.from("profiles").select("display_name").eq("id", user?.id ?? "").maybeSingle();
+  const { data: profile } = await db.from("profiles").select("display_name, avatar").eq("id", user?.id ?? "").maybeSingle();
+  // First sign-in (spec 003): choose your avatar before anything else.
+  if (profile && !profile.avatar) redirect("/choose-avatar");
   const name = firstName(profile?.display_name);
   return (
     <div className="welcome">
