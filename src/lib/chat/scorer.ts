@@ -20,10 +20,19 @@ export const ScorerWire = z.object({
   alternative_english: z.string().nullable(),
   why: z.string().describe("One short line in English explaining the main fix (empty if perfect)"),
   hint: z.string().describe("One clue for a retry, never the full answer (empty if perfect)"),
+  // Listed BEFORE the scores on purpose: the model writes fields in order, so
+  // it finds the mistakes first and then scores from that list (steadier).
+  mistakes: z.array(z.object({
+    said: z.string().describe("The words she wrote"),
+    fix: z.string().describe("What a native speaker would say instead"),
+    type: z.enum(MISTAKE_TYPES),
+    part: z.enum(["grammar", "spoken"]),
+    size: z.enum(["small", "big"]),
+  })).describe("Every real mistake, one entry each; empty if the sentence is already correct"),
+  mistake_types: z.array(z.enum(MISTAKE_TYPES)).describe("The distinct types from `mistakes`"),
   grammar: z.number().int().nullable().describe("0-6, null unless kind = scored"),
   spoken: z.number().int().nullable().describe("0-4, null unless kind = scored"),
   total: z.number().int().nullable().describe("grammar + spoken, null unless kind = scored"),
-  mistake_types: z.array(z.enum(MISTAKE_TYPES)),
   care_message: z.string().nullable().describe("Only for kind = safety: a caring message in English"),
 });
 export type ScorerOutput = z.infer<typeof ScorerWire>;

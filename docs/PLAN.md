@@ -122,6 +122,10 @@ The MVP is single-user.
   with a question or invitation, asks for details, stretches now and then. It handles **safety by
   itself** (one line in simple English), since it no longer waits for the scorer. The scene text
   is built by `sceneText()`.
+- `prompts/corrector_scorer_v2.md` (config points at it; v1 kept), after the first smoke eval failed
+  (scores jumped around, spelling and short forms marked wrong, a time word changed instead of the verb).
+  The scorer now fills a `mistakes` list (said, fix, type, grammar/spoken, small/big) **before** the
+  scores and scores from it, with anchors for 10/9/8/6. Its examples avoid the smoke eval's sentences.
 - **Screen:** `src/components/Turns.tsx` (Laddu's bubble: English on tap; mine: the ⭐ chip, tap to
   open the card). What the chip says: `chipFor()` in `src/lib/chat/chip.ts`. No Continue button.
   If a chat is reopened with my message unanswered, "🧸 Tap here and Laddu will answer." A safety

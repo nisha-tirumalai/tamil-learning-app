@@ -8,9 +8,10 @@ export const goodAnswer = {
   alternative_english: null,
   why: "\"nalla illa\" is fine, but people usually say \"sariyaa pogala\" about a day.",
   hint: "How do people say a day \"didn't go\" well?",
+  mistakes: [{ said: "En naal nalla illa", fix: "Inniki naal sariyaa pogala", type: "too literal", part: "spoken", size: "big" }],
+  mistake_types: ["too literal"],
   grammar: 5,
   spoken: 2,
   total: 7,
-  mistake_types: ["too literal"],
   care_message: null,
 };

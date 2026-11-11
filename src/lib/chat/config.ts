@@ -12,7 +12,8 @@ export const CHAT_CONFIG = {
   /** Give up on a model call after this long and show the friendly error. */
   timeoutMs: 15_000,
   prompts: {
-    corrector: "corrector_scorer_v1",
+    /** v2: spelling and short forms are never mistakes, keeps time words, lists mistakes then scores. v1 kept for comparison. */
+    corrector: "corrector_scorer_v2",
     /** v2 (spec 002): stays in the scene, ends with a question. v1 is kept for comparison. */
     tutor: "tutor_system_v2",
   },
