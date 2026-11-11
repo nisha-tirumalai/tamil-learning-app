@@ -1,6 +1,6 @@
 # 002: Laddu v1.1 (calmer screen, instant replies, stays in the scene)
 
-**Status:** Draft, waiting for Nisha's approval (2026-11-10)
+**Status:** ✅ Approved by Nisha (2026-11-10)
 **Phase:** 3b (SCOPING.md §10), before voice (phase 5)
 **Based on:** Nisha's first real chat with Laddu on her phone, 2026-11-10
 
@@ -116,11 +116,8 @@ a situation + a message from me, e.g. the grocery shop + "I'm making sweets".
 the screen feels calm, I open a few ⭐ chips and they're useful, and Laddu keeps
 the scene going with questions that make me try new things.
 
-## Open questions (my suggested answer in brackets)
+## Decided with the approval (2026-11-10)
 
-- ✍️ 10/10 messages: show the praise line right in the chip, or just ⭐ 10?
-  [praise in the chip, it's fun]
-- ✍️ Should a big mistake show a tiny hint without opening the chip, e.g. a
-  red dot? [no, keep it calm for now]
-- ✍️ After Try again, should Laddu react ("Ah, ippo correct!")? [no, keeps it
-  simple; revisit with voice]
+- 10/10 messages: the praise line shows right in the chip.
+- No red dot or hint for big mistakes; the chip just shows the score.
+- Laddu doesn't react to a Try again (maybe later, with voice).

@@ -19,7 +19,7 @@ decisions. Update it at the end of every phase.
 
 ## Where we are (2026-11-11)
 
-- **2026-11-10, first real use:** Laddu works on Nisha's phone (migration run, key added). Feedback: too many words on screen; waiting for the score is slow; Laddu doesn't stay in the scene or keep the chat going; voice is essential; wants Laddu big and talking. → Next: spec 002 (v1.1), then voice (phase 5) before the gold set. One scorer miss to flag: "samikiren" (meant *samaikkiren*, cooking) was read as "worship", and the meaning was changed to buying.
+- **2026-11-10, first real use:** Laddu works on Nisha's phone (migration run, key added). Feedback: too many words on screen; waiting for the score is slow; Laddu doesn't stay in the scene or keep the chat going; voice is essential; wants Laddu big and talking. → Spec 002 (v1.1) approved 2026-11-10. **Next: build spec 002 in the codespace**, then spec 003 (voice), then go live on Vercel, then the gold set. One scorer miss to flag: "samikiren" (meant *samaikkiren*, cooking) was read as "worship", and the meaning was changed to buying.
 - **Phase 3 (chat v1 with Laddu): built, waiting for Nisha's on-phone check.**
   All 52 tests pass (`npm run test:db`), using a fake model (no key, no cost).
   Not yet done, and needs Nisha:
@@ -43,7 +43,7 @@ decisions. Update it at the end of every phase.
 
 ## Phases (mirrors SCOPING.md §10; SCOPING wins if they differ)
 
-**Order changed 2026-11-10:** after phase 3 comes 3b (Laddu v1.1), then **voice (5) before the gold set (4)**. The numbers stay the same so older docs still make sense.
+**Order changed 2026-11-10:** 3 → **3b** (Laddu v1.1) → **5** (voice) → **going live on Vercel** (moved up from phase 8) → **4** (gold set) → 6 → 7 → 8 (two weeks of daily use + weekly reviews) → 9. The numbers stay the same so older docs still make sense.
 
 | Phase | What | Status | Spec |
 |---|---|---|---|
@@ -51,8 +51,9 @@ decisions. Update it at the end of every phase.
 | 1 | Lesson data pipeline | ✅ | (before specs) |
 | 2 | Login + private per-user data | ✅ 2026-11-07 | (before specs) |
 | 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts → correction + score /10 + try again + continue | 🟨 built 2026-11-11, needs key + phone check | [001](specs/001-chat-v1.md) |
-| 3b | **Laddu v1.1:** fewer words, instant reply with tap-to-open score, stays in the scene, stretch questions | ⬜ | 002 (to write) |
+| 3b | **Laddu v1.1:** fewer words, instant reply with tap-to-open score, stays in the scene, stretch questions | 🟨 spec approved 2026-11-10 | [002](specs/002-laddu-v1-1.md) |
 | 5 | **Talk to Laddu (voice), moved up:** speak in, Tamil voice out, mute, call-style screen with Laddu talking | ⬜ | 003 (to write) |
+| (8 →) | **Go live on Vercel (moved up):** always-on address, home-screen install, keys in Vercel settings, Supabase URL config | ⬜ | setup walkthrough, no spec |
 | 4 | **Rubric + gold set + evals:** 20→40 scored messages, eval script, compare 2–3 models, one model per job | ⬜ | |
 | 6 | **Memory + progress:** weak-spots list steers conversations; weekly progress screen | ⬜ | |
 | 7 | Logging + Project HQ dashboard | ⬜ | |

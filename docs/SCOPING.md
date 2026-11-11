@@ -376,7 +376,7 @@ I approve the spec, *then* code gets written.
 
 ✍️ **YOUR CALL:** set target dates. Status: ⬜ not started · 🟨 in progress · ✅ done
 
-**Order changed 2026-11-10:** after phase 3 comes 3b (Laddu v1.1), then **voice (5) before the gold set (4)**. The numbers stay the same so older docs still make sense.
+**Order changed 2026-11-10:** 3 → **3b** (Laddu v1.1) → **5** (voice) → **going live on Vercel** (moved up from phase 8) → **4** (gold set) → 6 → 7 → 8 (two weeks of daily use + weekly reviews) → 9. The numbers stay the same so older docs still make sense.
 
 | Phase | What | Target | Status |
 |---|---|---|---|
@@ -460,6 +460,7 @@ It reads this file + the eval results + the `ai_requests` table, so this doc sta
 | 2026-11-09 | Welcome = "Vaanga, Nisha!" with I start / Laddu starts; Laddu starts a random real-life situation (role-play) | Situations like ordering chai are real practice; no choosing keeps it light; fewer buttons |
 | 2026-11-09 | No agent: a fixed two-step workflow (correct, then reply) | Faster, cheaper, predictable and testable |
 | 2026-11-10 | Voice (phase 5) moves before the gold set (phase 4); a quick v1.1 (3b) first | After trying v1: typing isn't fun enough, voice is core; the gold set needs real messages that v1 and voice will produce |
+| 2026-11-10 | Go live on Vercel right after voice, before the gold set | Laddu always on, one tap away on my phone, so I chat more and collect real messages |
 | 2026-11-10 | Laddu replies without waiting for the score; score becomes a tap-to-open chip | Waiting for the score felt slow; the score matters less than the conversation |
 | 2026-11-07 | Stay a PWA, not an App Store app | Free, instant updates, one codebase; enough for chat + speech |
 | 2026-11-07 | Spoken (colloquial) Tamil is the core differentiator | Tamil diglossia: most tools and materials default to formal Tamil, which isn't how families speak |
