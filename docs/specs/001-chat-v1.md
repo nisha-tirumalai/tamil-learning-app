@@ -223,8 +223,6 @@ app's score is within ±1 of a fluent speaker's on 80% of messages; speech is
 heard correctly most of the time.) What does "affordable" mean? (e.g. under
 $5 a month for me.) What would I do if one half fails?
 
-**2.** *(to add)*
-
 ## Decisions log for this spec
 
 **2026-11-09:** the tutor is **Laddu** 🧸, a teddy-bear friend (not amma-style) ·
