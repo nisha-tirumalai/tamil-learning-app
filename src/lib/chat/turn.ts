@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { CHAT_CONFIG, ERROR_TEXT, SITUATIONS } from "./config";
 import { type ChatModel, loadPrompt, type Turn } from "./model";
 import { findSituation, firstName, pickPraise, pickSituation } from "./pick";
-import { type Card, checkScorerOutput, type Score, toScore } from "./scorer";
+import { type Card, checkScorerOutput, type Score, type ScorerOutput, toScore } from "./scorer";
 import { hasTamilScript } from "./tamil";
 
 type Db = SupabaseClient;
@@ -127,6 +127,29 @@ function contextText(rows: MessageRow[], upToId: number, situationKey: string | 
   return lines.join("\n");
 }
 
+export function scorerPrompt(situationKey: string | null, context: string): string {
+  return loadPrompt(CHAT_CONFIG.prompts.corrector, { tone: toneRule(situationKey), context });
+}
+
+export function scorerMessage(text: string, intended: string | null): string {
+  return `Nisha's message: ${text}` + (intended ? `\nIntended meaning (from Nisha): ${intended}` : "");
+}
+
+/** Asks, checks, and asks once more if the answer was unusable (e.g. Tamil script). null = give up. */
+export async function askScorer(model: ChatModel, system: string, message: string): Promise<ScorerOutput | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const checked = checkScorerOutput(await model.score({ system, message }));
+      if (checked.ok) return checked.value;
+      console.warn(`corrector_scorer answer rejected: ${checked.problem}`);
+    } catch (e) {
+      console.warn("corrector_scorer call failed:", (e as Error).message);
+      return null;   // timeouts and outages: don't make her wait twice
+    }
+  }
+  return null;
+}
+
 /**
  * Scores one of my messages and saves (or replaces) its card. If the model
  * fails, the message itself is kept and can be scored again.
@@ -145,24 +168,10 @@ export async function scoreMessage(db: Db, model: ChatModel, messageId: number):
     intended = original?.meant ?? (original && scoreOf(original)?.card.understood) ?? null;
   }
 
-  const system = loadPrompt(CHAT_CONFIG.prompts.corrector, {
-    tone: toneRule(conversation.situation),
-    context: contextText(rows, msg.id, conversation.situation),
-  });
-  const message = `Nisha's message: ${msg.text}` + (intended ? `\nIntended meaning (from Nisha): ${intended}` : "");
+  const system = scorerPrompt(conversation.situation, contextText(rows, msg.id, conversation.situation));
+  const message = scorerMessage(msg.text, intended);
 
-  // Ask, check, and ask once more if the answer was unusable (e.g. Tamil script).
-  let value = null;
-  for (let attempt = 0; attempt < 2 && !value; attempt++) {
-    try {
-      const checked = checkScorerOutput(await model.score({ system, message }));
-      if (checked.ok) value = checked.value;
-      else console.warn(`corrector_scorer answer rejected: ${checked.problem}`);
-    } catch (e) {
-      console.warn("corrector_scorer call failed:", (e as Error).message);
-      break;   // timeouts and outages: don't make her wait twice
-    }
-  }
+  const value = await askScorer(model, system, message);
   if (!value) return { ok: false, messageId, reason: "error", error: ERROR_TEXT };
 
   // Praise line: never the same as the last one in this conversation.

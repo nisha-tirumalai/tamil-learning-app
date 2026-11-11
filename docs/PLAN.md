@@ -17,18 +17,22 @@ decisions. Update it at the end of every phase.
 4. **Secrets only in GitHub Codespaces secrets**, never in files. The repo is public.
    `.env*` stays gitignored anyway, as a safety net.
 
-## Where we are (2026-11-07)
+## Where we are (2026-11-11)
 
-- **Phase 2 (login): done.** Running in Codespaces; 18/18 tests pass there
-  (`npm test` + `npm run test:db`); Nisha logged in on her phone through the
-  forwarded port. Real Supabase project created (migration run, allowlist has
-  nisha.tirumalai@gmail.com, Before User Created hook on, URL config set to the
-  codespace address), keys in Codespaces secrets.
-- **CI:** the type-check failed on `tests/rls.test.ts` (literal row types vs the
-  untyped Supabase client); fixed 2026-11-07. **CI green** from commit 41b31c4.
-- **Next: build phase 3.** Spec 001 (Chat v1 with Laddu 🧸, a teddy-bear friend) approved by Nisha 2026-11-09.
-  Build it in the codespace (npm is blocked on the laptop).
-  Phase 3 also needs an Anthropic API key as a Codespaces secret (`ANTHROPIC_API_KEY`).
+- **Phase 3 (chat v1 with Laddu): built, waiting for Nisha's on-phone check.**
+  All 52 tests pass (`npm run test:db`), using a fake model (no key, no cost).
+  Not yet done, and needs Nisha:
+  1. Run the new migration on the real Supabase project: paste
+     `supabase/migrations/20261111000000_chat_v1.sql` into the SQL Editor and Run.
+  2. Add an Anthropic API key as the Codespaces secret `ANTHROPIC_API_KEY`
+     (console.anthropic.com → API keys; set a small monthly spend limit there),
+     then reload the codespace. Without it, Laddu says "isn't set up yet".
+  3. With her OK, run the smoke eval (`npm run eval:smoke`, about $0.05) and look at the table.
+  4. Approve (or ask to change) the v1 drawings of Laddu and the girl, and check the praise lines' Tanglish with her teacher.
+  5. "Done when": 10 real messages on her phone feel right.
+- **Phase 2 (login): done** 2026-11-07. CI green.
+- **Building happens in Claude Code** (her Claude subscription). The **app** calls Claude
+  through the API key above; that's separate and billed per use (cents a day at the cap).
 - **Small follow-ups:** switch login from a magic link to a 6-digit email code
   (links only work in the browser that asked for them, and an installed PWA on
   iPhone has its own storage, so links won't work there); explicit grants (below).
@@ -43,7 +47,7 @@ decisions. Update it at the end of every phase.
 | 0 | Goals + scoping doc | 🟨 | [SCOPING.md](SCOPING.md) |
 | 1 | Lesson data pipeline | ✅ | (before specs) |
 | 2 | Login + private per-user data | ✅ 2026-11-07 | (before specs) |
-| 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts → correction + score /10 + try again + continue | 🟨 spec approved 2026-11-09 | [001](specs/001-chat-v1.md) |
+| 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts → correction + score /10 + try again + continue | 🟨 built 2026-11-11, needs key + phone check | [001](specs/001-chat-v1.md) |
 | 4 | **Rubric + gold set + evals:** 40 scored messages, eval script, compare 2–3 models | ⬜ | |
 | 5 | **Speak:** speech-to-text in, Tamil voice out, 🔊/🔇 toggle, switch Speak ↔ Chat | ⬜ | |
 | 6 | **Memory + progress:** weak-spots list steers conversations; weekly progress screen | ⬜ | |
@@ -73,6 +77,26 @@ The MVP is single-user.
   `npm run test:db` (starts a local Supabase in Docker, then runs everything).
 - Magic link only, no Google sign-in. Fine for a single user.
 - `scripts/` is left out of `npm run typecheck` for now (never type-checked).
+
+## Phase 3: what's built
+- `supabase/migrations/20261111000000_chat_v1.sql`: `conversations` → `messages` →
+  `scores` (all RLS; a message can only go in your own conversation, a score only on
+  your own message; deleting a conversation cascades). `scores` has grammar 0–6,
+  spoken 0–4, total = sum (checked by the database), mistake types, the whole card as
+  JSON, prompt version and model. A try-again is a message with `retry_of` → the first
+  message. `bump_chat_usage(cap)` counts against `usage_daily` in the user's timezone
+  (security definer, own row only). `flags.message_id` links chat flags.
+  The column is `spoken`, not "natural" (`natural` is a reserved word in SQL).
+- `src/lib/chat/`: `config.ts` (model, cap, prompt versions, praise lines, situations),
+  `scorer.ts` (answer shape + strict check), `tamil.ts` (guard), `model.ts` (Anthropic
+  + `FakeModel`), `turn.ts` (the whole turn: send, retry, "not what I meant", reply
+  stream, past chats, flag, delete). Prompts in `prompts/`.
+- Screens: `/` welcome, `/chat/[id]` live chat, `/chats` past chats (+ delete with
+  confirm), `/chats/[id]` read-only, `/lessons` lesson browser. Laddu's reply streams
+  from `/api/chat/[id]/reply` (one JSON event per line).
+- What counts toward the cap: each scored message (send, try again, "not what I
+  meant", tap-to-retry) and Laddu's opener. Continue replies don't.
+- Sending a new message instead of tapping Continue moves on without Laddu's reply.
 
 ## Architecture
 
@@ -123,6 +147,13 @@ where `user_id` is you"), tested in `tests/rls.test.ts`.
 - **Open: email beyond Nisha.** Supabase's built-in email only sends to members
   of the Supabase organization, a few per hour. Fine for single-user MVP; needs
   Google sign-in or SMTP (e.g. Resend) before anyone else joins.
+
+- **2026-11-11: Model settings.** `claude-haiku-5-5` with effort "low" for both calls (speed target 3 s);
+  structured outputs for the scorer, plus our own stricter check (ranges, sum, list, Tamil).
+  No automatic SDK retries (`maxRetries: 0`, 15 s timeout); the person taps to retry.
+  One extra try only when an answer is unusable (e.g. Tamil script). Phase 4 tunes all this.
+- **2026-11-11: Tamil guard while streaming.** Each streamed piece is checked before it's
+  sent; on Tamil letters the server sends "reset", retries once, then the friendly error.
 
 ## Data stats (2026-11-04)
 
