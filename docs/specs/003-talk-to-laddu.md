@@ -1,6 +1,6 @@
 # 003: Talk to Laddu (voice)
 
-**Status:** Draft, waiting for Nisha's answers and approval (2026-11-10)
+**Status:** Draft with Nisha's answers (2026-11-10), waiting for approval
 **Phase:** 5 (SCOPING.md §10), moved up: after 3b (Laddu v1.1), before going live
 **Based on:** SCOPING §0 (Speak mode, captions, 🔊/🔇, slow/replay), the
 2026-11-10 feedback ("voice has to be a key part"; "Laddu's whole body, his
@@ -21,7 +21,7 @@ Laddu answers in a natural Tamil voice with his mouth moving, and I still get my
         │          🧸  (big, full body,  │
         │       mouth moves as he talks)│
         │                               │
-        │  "Ooh, Mysore pak-aa! Adhukku │   ← caption (see open question 1)
+        │  "Ooh, Mysore pak-aa! Adhukku │   ← caption while he talks (English on tap)
         │   enna enna venum, sollu?"    │
         │   [🐢 slow] [🔁 again]  [🔇]   │
         │                               │
@@ -64,7 +64,8 @@ spec. Hearing and voice can come from different services.
 ## Acceptance criteria
 
 **Talking**
-- [ ] A **🎤 hold-to-talk** button (see open question 2). Release to send. The
+- [ ] A **🎤 hold-to-talk** button. Release to send. (Holding also stops anyone
+      talking for ages and running up the bill; recordings over 30 s are cut off.) The
       first time, the phone asks for microphone permission; if I say no, I see
       how to turn it on, and typing still works.
 - [ ] What Laddu heard appears as my bubble in **Tanglish** (never Tamil script).
@@ -75,11 +76,17 @@ spec. Hearing and voice can come from different services.
 - [ ] **⌨️ Type instead** is always one tap away; I can switch any time.
 
 **Laddu talking**
+- [ ] Laddu's voice sounds like a **little boy**: young and playful. (Most Tamil
+      voices are adults; the bake-off looks for the youngest-sounding one, and
+      may raise its pitch a little if needed.)
 - [ ] Laddu's reply is **spoken** in the chosen Tamil voice, starting within
       **3 s** of my sending (typical, Wi-Fi).
 - [ ] The voice reads a hidden **Tamil-script** version of the reply (made with
       the reply, so pronunciation is right) while the screen only ever shows
       Tanglish. Same rule as always: no Tamil script on screen.
+- [ ] **Captions:** while Laddu talks, his words show in Tanglish (one line under
+      him); the English is on tap.
+- [ ] Laddu's **opening line** in a situation is spoken too.
 - [ ] **🐢 Slow** replays the reply more slowly; **🔁 Again** replays it.
 - [ ] **🔇 Mute**: Laddu's replies are text only (for the bus); remembered.
 - [ ] Sound only starts after I've tapped something (phones require this).
@@ -162,19 +169,11 @@ and mute works on the bus.
 4. **Listen to the voice samples** (with amma if you can) and pick Laddu's voice.
 5. **Describe Laddu's look**, or share teddy pictures you like.
 
-## Open questions (my suggestion in brackets)
+## Decided by Nisha (2026-11-10)
 
-1. ✍️ **Captions while Laddu talks:** SCOPING said captions are *always* shown
-   (the ChatGPT test was too fast to follow), but spec 002 hides words to keep
-   the screen calm. Which? [show Laddu's Tanglish caption while he talks, one
-   line, English on tap]
-2. ✍️ **Hold to talk, or tap to start and tap to stop?** [hold to talk: simpler,
-   and it doesn't accidentally record the bus]
-3. ✍️ **Laddu's voice:** a boy's or a man's voice, or a woman's? Young and playful,
-   or calm? [young and playful, to match a teddy friend; depends what the
-   services have]
-4. ✍️ **Should Laddu's opening line also be spoken** when he starts a situation?
-   [yes]
-5. ✍️ **If hearing is clearly bad for everyone in the bake-off,** what then?
-   [keep voice *out* for Laddu (he still talks), and I keep typing until a
-   better service exists; that's a real finding for the write-up]
+- **Captions:** yes, Laddu's Tanglish words show while he talks (English on tap).
+- **Hold to talk**, so nobody talks for too long and spends too much.
+- **Laddu's voice:** a little boy.
+- **Opening line:** spoken out loud too.
+- **No backup plan** written in advance: if the bake-off shows hearing is poor,
+  we decide then.
