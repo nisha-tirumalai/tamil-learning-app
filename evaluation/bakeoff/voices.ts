@@ -20,7 +20,7 @@ type Sample = { service: ServiceId; label: string; note: string; file: string; m
 
 // ─── ElevenLabs ────────────────────────────────────────────────────────────
 
-const XI = () => ({ "xi-api-key": env("ELEVENLABS_API_KEY") });
+const XI = () => ({ "xi-api-key": env("ELEVEN_LABS_API_KEY") });
 type SharedVoice = { voice_id: string; public_owner_id: string; name: string; gender?: string; age?: string; accent?: string; preview_url?: string; description?: string };
 let elevenShared: SharedVoice[] = [];
 

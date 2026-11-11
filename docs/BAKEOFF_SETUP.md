@@ -23,7 +23,7 @@ npm run bakeoff:check
    If it asks for permissions, allow **Speech to Text**, **Text to Speech** and
    **Voices** (read and write: the bake-off adds 2–3 Tamil voices from the voice
    library to "My voices" so it can use them).
-3. Secret: **`ELEVENLABS_API_KEY`** = the key.
+3. Secret: **`ELEVEN_LABS_API_KEY`** = the key.
 
 ## 2. Azure Speech
 

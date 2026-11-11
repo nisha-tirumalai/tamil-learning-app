@@ -29,7 +29,7 @@
       "description": "Supabase → Project Settings → API Keys → Publishable key",
       "documentationUrl": "https://github.com/nisha-tirumalai/tamil-learning-app/blob/main/docs/SUPABASE_SETUP.md"
     },
-    "ELEVENLABS_API_KEY": {
+    "ELEVEN_LABS_API_KEY": {
       "description": "Voice bake-off (optional): ElevenLabs → Developers → API Keys",
       "documentationUrl": "https://github.com/nisha-tirumalai/tamil-learning-app/blob/main/docs/BAKEOFF_SETUP.md"
     },

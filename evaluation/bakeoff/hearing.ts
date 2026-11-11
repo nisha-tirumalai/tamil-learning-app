@@ -30,7 +30,7 @@ async function elevenlabs(rec: Recording): Promise<Heard> {
   form.append("tag_audio_events", "false");
   form.append("file", new Blob([readFileSync(rec.m4a)], { type: "audio/mp4" }), "recording.m4a");
   const res = await ok(await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
-    method: "POST", headers: { "xi-api-key": env("ELEVENLABS_API_KEY") }, body: form,
+    method: "POST", headers: { "xi-api-key": env("ELEVEN_LABS_API_KEY") }, body: form,
   }), "ElevenLabs");
   return { text: ((await res.json()) as { text: string }).text.trim(), model };
 }

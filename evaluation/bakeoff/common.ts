@@ -15,7 +15,7 @@ export type ServiceId = "elevenlabs" | "azure" | "google";
 
 /** Which Codespaces secrets each service needs. */
 export const SERVICES: Record<ServiceId, { name: string; keys: string[] }> = {
-  elevenlabs: { name: "ElevenLabs", keys: ["ELEVENLABS_API_KEY"] },
+  elevenlabs: { name: "ElevenLabs", keys: ["ELEVEN_LABS_API_KEY"] },
   azure: { name: "Azure Speech", keys: ["AZURE_SPEECH_KEY", "AZURE_SPEECH_REGION"] },
   google: { name: "Google Cloud", keys: ["GOOGLE_SERVICE_ACCOUNT_JSON"] },
 };
