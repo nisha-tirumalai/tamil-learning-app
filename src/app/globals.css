@@ -92,3 +92,82 @@ button.secondary { background: transparent; color: var(--muted); }
 .muted { color: var(--muted); }
 .small { font-size: 0.85rem; }
 .error { color: var(--danger); }
+
+/* ─── Chat with Laddu (spec 001) ─────────────────────────────────────────── */
+:root { --laddu: #fdf0dc; --mine: #e9f3ee; }
+@media (prefers-color-scheme: dark) { :root { --laddu: #33281b; --mine: #1d3028; } }
+
+.top nav { gap: 0.9rem; flex-wrap: wrap; font-size: 0.95rem; }
+.center { text-align: center; }
+.avatar { flex: none; }
+
+.welcome { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-top: 6vh; text-align: center; }
+.bubble {
+  background: var(--laddu); border-radius: 1rem; padding: 0.6rem 0.9rem; position: relative; max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.bubble.big { padding: 0.9rem 1.4rem; }
+.bubble.big .tanglish { font-size: 1.5rem; }
+.bubble p { margin: 0; }
+.start-buttons { display: flex; gap: 0.75rem; }
+.start-buttons button { font-size: 1.1rem; padding: 0.8rem 1.4rem; margin: 0; }
+
+.situation { color: var(--muted); font-weight: 600; margin: 0 0 0.5rem; }
+.chat { display: flex; flex-direction: column; min-height: calc(100dvh - 9rem); }
+.thread { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; padding-bottom: 1rem; }
+.msg { display: flex; align-items: flex-end; gap: 0.5rem; }
+.msg.laddu .bubble { border-bottom-left-radius: 0.25rem; max-width: 80%; }
+.msg.me { justify-content: flex-end; }
+.msg.me .bubble { background: var(--mine); border-bottom-right-radius: 0.25rem; max-width: 80%; }
+.msg.me .earlier { color: var(--muted); text-decoration: line-through; font-size: 0.9rem; }
+
+.correction {
+  margin: 0.4rem 0 0 auto; width: min(100%, 32rem);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 0.9rem;
+}
+.correction.care { border-color: var(--spoken); }
+.correction p { margin: 0.35rem 0 0; }
+.correction-top { display: flex; gap: 0.75rem; align-items: flex-start; justify-content: space-between; }
+.correction button { margin-top: 0; }
+.correction .better {
+  background: none; color: var(--text); padding: 0; text-align: left; font-size: 1.15rem; font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.correction .better .english { display: block; font-size: 0.95rem; font-weight: 400; }
+.correction .score {
+  flex: none; background: var(--laddu); color: var(--text); padding: 0.2rem 0.6rem; border-radius: 999px; white-space: nowrap;
+}
+.tap-hint { font-size: 0.8rem; color: var(--muted); }
+.understood { color: var(--muted); font-size: 0.95rem; }
+.link-button.inline { display: inline; margin: 0 0 0 0.4rem; padding: 0; font-size: 0.85rem; }
+.tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.tags .tag { color: var(--formal); }
+.more { border-left: 3px solid var(--border); padding-left: 0.6rem; margin-top: 0.5rem; }
+.nudge { font-weight: 600; color: var(--spoken); }
+.hint { background: var(--laddu); border-radius: 0.5rem; padding: 0.4rem 0.6rem; }
+.inline-form { margin-top: 0.6rem; }
+.card-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.7rem; }
+.card-buttons button { margin: 0; }
+.card-buttons .link-button { margin-left: auto; }
+.pie { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
+.pie-legend { list-style: none; margin: 0; padding: 0; font-size: 0.9rem; }
+.dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.4rem; }
+.error-box {
+  background: var(--surface); color: var(--danger); border: 1px solid var(--danger); text-align: left; font-weight: 500;
+}
+
+.composer {
+  position: sticky; bottom: 0; display: flex; gap: 0.5rem; padding: 0.6rem 0;
+  background: var(--bg); border-top: 1px solid var(--border);
+}
+.composer input { margin: 0; flex: 1; font-size: 16px; }
+.composer button { margin: 0; }
+
+.past-chat { margin-bottom: 0.5rem; }
+.past-chat a { margin-bottom: 0.2rem; }
+.past-chat .topic { display: block; font-weight: 600; }
+.past-chat .score { background: var(--laddu); border-radius: 999px; padding: 0.1rem 0.6rem; white-space: nowrap; }
+.past-chat > .link-button, .past-chat .confirm { display: flex; margin: 0 0.25rem 0 auto; justify-content: flex-end; }
+.confirm { gap: 0.5rem; font-size: 0.9rem; }
+.confirm button { margin: 0; padding: 0.3rem 0.7rem; }
+.danger-button { background: var(--danger); color: var(--accent-text); }

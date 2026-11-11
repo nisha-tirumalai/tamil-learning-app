@@ -21,8 +21,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {user && (
           <header className="top">
             <nav>
-              <Link href="/">Lessons</Link>
-              <Link href="/flags">My flags</Link>
+              <Link href="/">🧸 Laddu</Link>
+              <Link href="/chats">Past chats</Link>
+              <Link href="/lessons">Lessons</Link>
+              <Link href="/flags">Flags</Link>
             </nav>
             <form action="/auth/signout" method="post">
               <button className="link-button">Sign out</button>
