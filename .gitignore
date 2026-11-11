@@ -17,6 +17,10 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 
+# Private files: voice recordings for the bake-off, reference pictures, gold set.
+# Put anything personal in private/ and it will never be uploaded.
+private/
+
 # Local Supabase CLI working files (created by npm run test:db)
 supabase/.temp/
 supabase/.branches/

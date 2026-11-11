@@ -97,9 +97,11 @@ spec. Hearing and voice can come from different services.
       of his voice). When he's quiet, he idles (blinks).
 - [ ] My girl character is smaller, near my bubble.
 - [ ] Earlier messages scroll above, as in spec 002 (English and score on tap).
-- [ ] New drawings (Laddu full body, two or three mouth shapes) are shown to me
-      for approval first. If I provide teddy pictures I like (that I have the
-      right to use), they're used as the style guide.
+- [ ] New drawings (Laddu full body, two or three mouth shapes, and my girl
+      character) are shown to me for approval first. **Nisha provides pictures**
+      for Laddu's look and for her own character's look (pictures she has the
+      right to use); they're the style guide. They stay out of the public repo
+      unless she says otherwise; only the finished drawings go in.
 
 **Rules that always hold**
 - [ ] **Daily cap:** each spoken message counts like a typed one. A recording
