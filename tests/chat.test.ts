@@ -5,7 +5,7 @@ import { loadPrompt } from "@/lib/chat/model";
 import { firstName, pickPraise, pickSituation } from "@/lib/chat/pick";
 import { checkScorerOutput, toScore } from "@/lib/chat/scorer";
 import { hasTamilScript } from "@/lib/chat/tamil";
-import { buildThread, splitReply, type MessageRow } from "@/lib/chat/turn";
+import { buildThread, sceneText, splitReply, tutorTurns, type MessageRow } from "@/lib/chat/turn";
 import { goodAnswer } from "./fixtures";
 
 
@@ -115,5 +115,40 @@ describe("small helpers", () => {
     const thread = buildThread([row(1, "laddu"), row(2, "me"), row(3, "me", 2), row(4, "me", 2), row(5, "laddu")]);
     expect(thread.map((t) => t.type)).toEqual(["laddu", "me", "laddu"]);
     expect(thread[1].type === "me" && thread[1].attempts.map((a) => a.id)).toEqual([2, 3, 4]);
+  });
+});
+
+describe("what Laddu sees (spec 002)", () => {
+  const row = (id: number, role: "me" | "laddu", over: Partial<MessageRow> = {}): MessageRow => ({
+    id, role, text: `m${id}`, english: role === "laddu" ? "e" : null, meant: null, retry_of: null, created_at: "",
+    scores: role === "me" ? [{ grammar: 4, spoken: 2, total: 6, mistake_types: [], card: { understood: "the scorer's guess" } as never }] : [],
+    ...over,
+  });
+  test("he reads my own words, not the scorer's guess", () => {
+    const turns = tutorTurns([row(1, "laddu"), row(2, "me", { text: "Na konjam sweets samikiren" })]);
+    expect(turns.at(-1)).toEqual({ role: "user", content: "Na konjam sweets samikiren" });
+    expect(JSON.stringify(turns)).not.toContain("the scorer's guess");
+  });
+  test("but if I said what I meant, he gets that", () => {
+    const turns = tutorTurns([row(2, "me", { meant: "I'm making sweets" })]);
+    expect(turns[0].content).toContain("I'm making sweets");
+  });
+  test("two of my messages in a row (a failed reply in between) become one turn", () => {
+    const turns = tutorTurns([row(1, "laddu"), row(2, "me"), row(3, "me")]);
+    expect(turns.map((t) => t.role)).toEqual(["user", "assistant", "user"]);
+    expect(turns.at(-1)!.content).toBe("m2\nm3");
+  });
+  test("in a situation he stays in his role; otherwise he stays a friend", () => {
+    expect(sceneText("grocery", "Nisha", false)).toContain("the grocery shop owner");
+    expect(sceneText("grocery", "Nisha", false)).toContain("Stay in this role for the whole chat");
+    expect(sceneText(null, "Nisha", false)).toContain("Stay her friend");
+    expect(sceneText(null, "Nisha", true)).toContain("Open the conversation");
+  });
+  test("config uses tutor v2, and v1 is kept for comparison", () => {
+    expect(CHAT_CONFIG.prompts.tutor).toBe("tutor_system_v2");
+    expect(hasTamilScript(loadPrompt("tutor_system_v1", {}))).toBe(false);
+    const v2 = loadPrompt("tutor_system_v2", { name: "Nisha", scene: "S" });
+    expect(v2).toContain("ends with a question or an invitation");
+    expect(v2).toContain("988");
   });
 });

@@ -6,7 +6,7 @@ import { CHAT_CONFIG, ERROR_TEXT, SITUATIONS } from "@/lib/chat/config";
 import { FakeModel } from "@/lib/chat/model";
 import {
   deleteConversation, flagMessage, getConversation, listConversations, replyStream, rescore,
-  sendMessage, setMeaning, startConversation, type ReplyEvent,
+  sendMessage, sendTurn, setMeaning, startConversation, type ReplyEvent, type TurnEvent,
 } from "@/lib/chat/turn";
 import { goodAnswer } from "./fixtures";
 
@@ -19,8 +19,8 @@ const run = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)
 const email = `chat-${run}@test.local`;
 const password = `pw-${run}`;
 
-async function collect(events: AsyncIterable<ReplyEvent>) {
-  const all: ReplyEvent[] = [];
+async function collect<E extends ReplyEvent | TurnEvent>(events: AsyncIterable<E>) {
+  const all: E[] = [];
   for await (const e of events) all.push(e);
   return all;
 }
@@ -43,31 +43,84 @@ describe.skipIf(!configured)("chat turn flow (fake model)", () => {
     await admin.from("allowlist").delete().eq("email", email);
   });
 
-  test("send → card saved → try again (both scores) → continue streams a reply", async () => {
+  const today = () => new Date().toISOString().slice(0, 10);
+  async function usedToday() {
+    const { data } = await admin.from("usage_daily").select("chat_messages").eq("user_id", userId).eq("day", today());
+    return data?.[0]?.chat_messages ?? 0;
+  }
+  const turn = (model: FakeModel, conversationId: string, text: string) =>
+    collect(sendTurn(db, model, { conversationId, text, displayName: "nisha.tirumalai" }));
+
+  test("send: Laddu's reply arrives first while the score is slow; both are saved; counts once", async () => {
     const convo = await startConversation(db, "me");
-    const model = new FakeModel(
-      [answer({ grammar: 4, spoken: 2, total: 6 }), answer({ grammar: 6, spoken: 3, total: 9 })],
-      ["Aiyo, enna aachu, Nisha?\nOh no, what happened, Nisha?"],
-    );
+    const model = new FakeModel([answer({ grammar: 4, spoken: 2, total: 6 })], ["Aiyo, enna aachu, Nisha?\nOh no, what happened, Nisha?"]);
+    model.scoreDelayMs = 400;
+    const before = await usedToday();
 
-    const first = await sendMessage(db, model, { conversationId: convo.id, text: "En naal nalla illa." });
-    expect(first).toMatchObject({ ok: true, score: { total: 6 } });
+    const events = await turn(model, convo.id, "En naal nalla illa.");
+    const kinds = events.map((e) => e.t);
+    expect(kinds[0]).toBe("saved");
+    expect(kinds.indexOf("done")).toBeLessThan(kinds.indexOf("score"));   // reply didn't wait for the score
+    expect(events.find((e) => e.t === "score")).toMatchObject({ score: { total: 6 } });
+    expect(await usedToday()).toBe(before + 1);   // reply + score together count once
 
-    const retry = await sendMessage(db, model, { conversationId: convo.id, text: "Inniki naal sariyaa pogala.", retryOf: first.messageId });
-    expect(retry).toMatchObject({ ok: true, score: { total: 9 } });
-    // The retry was scored against what I originally meant.
-    expect(model.scoreCalls[1].message).toContain(`Intended meaning (from Nisha): ${goodAnswer.understood}`);
-
-    const events = await collect(replyStream(db, model, convo.id, "nisha.tirumalai"));
-    expect(events.filter((e) => e.t === "delta").length).toBeGreaterThan(1);
-    expect(events.at(-1)).toMatchObject({ t: "done", text: "Aiyo, enna aachu, Nisha?", english: "Oh no, what happened, Nisha?" });
-    // Laddu was told what I meant, and the latest attempt.
-    expect(model.replyCalls[0].messages.at(-1)!.content).toContain("Inniki naal sariyaa pogala.");
+    // Laddu read my own message, not the scorer's guess.
+    expect(model.replyCalls[0].messages.at(-1)).toEqual({ role: "user", content: "En naal nalla illa." });
     expect(model.replyCalls[0].system).toContain("Nisha");
 
     const { thread } = await getConversation(db, convo.id);
     expect(thread.map((t) => t.type)).toEqual(["me", "laddu"]);
+    expect(thread[0].type === "me" && thread[0].attempts[0].score?.total).toBe(6);
+  });
+
+  test("a failing scorer: the reply still arrives, and the score can be retried", async () => {
+    const convo = await startConversation(db, "me");
+    const model = new FakeModel([new Error("timeout"), answer()], ["Super, Nisha! Enga poreenga?\nGreat, Nisha! Where are you going?"]);
+    const events = await turn(model, convo.id, "Naan office-ku poren.");
+    const saved = events[0] as { messageId: number };
+    expect(events).toContainEqual({ t: "score_error", messageId: saved.messageId });
+    expect(events.find((e) => e.t === "done")).toMatchObject({ text: "Super, Nisha! Enga poreenga?" });
+    expect(await rescore(db, model, saved.messageId)).toMatchObject({ ok: true, score: { total: 7 } });
+  });
+
+  test("a failing reply: the score still saves, and the reply can be retried (free)", async () => {
+    const convo = await startConversation(db, "me");
+    const model = new FakeModel([answer()], [new Error("overloaded"), "Enna aachu?\nWhat happened?"]);
+    const events = await turn(model, convo.id, "En naal nalla illa.");
+    expect(events).toContainEqual({ t: "error", message: ERROR_TEXT });
+    expect(events.find((e) => e.t === "score")).toMatchObject({ score: { total: 7 } });
+
+    const before = await usedToday();
+    const retried = await collect(replyStream(db, model, convo.id, "Nisha"));
+    expect(retried.at(-1)).toMatchObject({ t: "done", text: "Enna aachu?" });
+    expect(await usedToday()).toBe(before);
+  });
+
+  test("try again: re-scored against what I first meant, both scores, no new reply", async () => {
+    const convo = await startConversation(db, "me");
+    const model = new FakeModel(
+      [answer({ grammar: 4, spoken: 2, total: 6 }), answer({ grammar: 6, spoken: 3, total: 9 })],
+      ["Aiyo, enna aachu?\nOh no, what happened?"],
+    );
+    const first = (await turn(model, convo.id, "En naal nalla illa."))[0] as { messageId: number };
+    const retry = await sendMessage(db, model, { conversationId: convo.id, text: "Inniki naal sariyaa pogala.", retryOf: first.messageId });
+    expect(retry).toMatchObject({ ok: true, score: { total: 9 } });
+    expect(model.scoreCalls[1].message).toContain(`Intended meaning (from Nisha): ${goodAnswer.understood}`);
+    expect(model.replyCalls).toHaveLength(1);   // Laddu didn't reply to the retry
+
+    const { thread } = await getConversation(db, convo.id);
+    expect(thread.map((t) => t.type)).toEqual(["me", "laddu"]);
     expect(thread[0].type === "me" && thread[0].attempts.map((a) => a.score?.total)).toEqual([6, 9]);
+  });
+
+  test("at the cap, sending gets \"See you tomorrow\" and nothing is saved or called", async () => {
+    const convo = await startConversation(db, "me");
+    await admin.from("usage_daily").upsert({ user_id: userId, day: today(), chat_messages: CHAT_CONFIG.dailyCap });
+    const model = new FakeModel([answer()], ["x\ny"]);
+    expect(await turn(model, convo.id, "Innum oru message")).toEqual([{ t: "cap" }]);
+    expect(model.scoreCalls.length + model.replyCalls.length).toBe(0);
+    expect((await db.from("messages").select("id").eq("conversation_id", convo.id)).data).toEqual([]);
+    await admin.from("usage_daily").delete().eq("user_id", userId).eq("day", today());
   });
 
   test("\"That's not what I meant\" re-does the card for that meaning", async () => {

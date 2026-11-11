@@ -79,10 +79,13 @@ export class FakeModel implements ChatModel {
   name = "fake";
   scoreCalls: { system: string; message: string }[] = [];
   replyCalls: { system: string; messages: Turn[] }[] = [];
+  /** Make scoring slow, to check that Laddu's reply doesn't wait for it. */
+  scoreDelayMs = 0;
   constructor(public scores: unknown[] = [], public replies: (string | Error)[] = []) {}
 
   async score(req: { system: string; message: string }) {
     this.scoreCalls.push(req);
+    if (this.scoreDelayMs) await new Promise((r) => setTimeout(r, this.scoreDelayMs));
     const next = this.scores.shift();
     if (next === undefined) throw new Error("FakeModel: no score queued");
     if (next instanceof Error) throw next;
