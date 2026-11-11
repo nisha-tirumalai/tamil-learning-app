@@ -19,6 +19,7 @@ decisions. Update it at the end of every phase.
 
 ## Where we are (2026-11-11)
 
+- **2026-11-11: Scorer prompt v3** (`prompts/corrector_scorer_v3.md`, config points at it). Fixes the one smoke-eval miss: when Nisha types what she meant ("That's not what I meant"), her stated meaning now wins over her words (e.g. *naalaikki* → *apram* when she meant "later"). The "keep time words" rule still holds for normal messages. **To do: re-run the smoke eval (`npm run eval:smoke`, ~$0.05) with Nisha's OK**, to confirm the SCOPING 1a "meant later" case passes and nothing else moved.
 - **2026-11-11: Phase 3b (spec 002, Laddu v1.1) built, waiting for Nisha's on-phone check.**
   All 72 tests pass (`npm run test:db`). Needs Nisha:
   1. With her OK, run the smoke eval (`npm run eval:smoke`, ~$0.05), then fill in the **In role?** column for Laddu's 6 scene replies, and look at the *samikiren* watch row.
