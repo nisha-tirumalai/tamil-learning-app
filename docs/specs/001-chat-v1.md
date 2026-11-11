@@ -197,6 +197,34 @@ Tamil script please", off-topic, and one safety case. Targets:
 feel right; Laddu starts a random situation and feels like a friend; I try again, continue, flag a card, open a past chat, delete one, and
 never see Tamil script.
 
+## The big questions behind this project
+
+These are the questions I asked myself when I came up with the idea. Each phase
+helps answer part of them.
+
+**1. Can an affordable speech-to-text model actually understand and correct
+spoken Tamil well enough to be useful?**
+
+This question has two halves, and the project tests them separately on purpose:
+- **Correct:** can a cheap, fast AI model (Claude Haiku) correct my Tanglish the
+  way a native speaker would, in spoken Tamil, not textbook Tamil?
+  - **This spec (v1)** tests it with typed messages. "Done" = 10 real messages
+    where the corrections feel right.
+  - **Phase 4** measures it properly: a gold set of ~40 messages scored by a
+    fluent speaker, compared with the app's scores, across 2–3 models.
+- **Understand speech:** can affordable speech-to-text hear mixed Tamil +
+  English (Tanglish) accurately? Tested in **phase 5** (voice).
+
+Splitting them means that if the answer is "not good enough," I'll know which
+half failed: the hearing or the correcting.
+
+*To think about for interviews:* what does "useful" mean in numbers? (e.g. the
+app's score is within ±1 of a fluent speaker's on 80% of messages; speech is
+heard correctly most of the time.) What does "affordable" mean? (e.g. under
+$5 a month for me.) What would I do if one half fails?
+
+**2.** *(to add)*
+
 ## Decisions log for this spec
 
 **2026-11-09:** the tutor is **Laddu** 🧸, a teddy-bear friend (not amma-style) ·
