@@ -57,7 +57,7 @@ decisions. Update it at the end of every phase.
 | 2 | Login + private per-user data | ✅ 2026-11-07 | (before specs) |
 | 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts → correction + score /10 + try again + continue | 🟨 built 2026-11-11, needs key + phone check | [001](specs/001-chat-v1.md) |
 | 3b | **Laddu v1.1:** fewer words, instant reply with tap-to-open score, stays in the scene, stretch questions | 🟨 built 2026-11-11, needs phone check + smoke eval | [002](specs/002-laddu-v1-1.md) |
-| 5 | **Talk to Laddu (voice), moved up:** speak in, Tamil voice out, mute, call-style screen with Laddu talking | ⬜ | 003 (to write) |
+| 5 | **Talk to Laddu (voice), moved up:** speak in, Tamil voice out, mute, call-style screen with Laddu talking | 🟨 spec approved 2026-11-11 | [003](specs/003-talk-to-laddu.md) |
 | (8 →) | **Go live on Vercel (moved up):** always-on address, home-screen install, keys in Vercel settings, Supabase URL config | ⬜ | setup walkthrough, no spec |
 | 4 | **Rubric + gold set + evals:** 20→40 scored messages, eval script, compare 2–3 models, one model per job | ⬜ | |
 | 6 | **Memory + progress:** weak-spots list steers conversations; weekly progress screen | ⬜ | |

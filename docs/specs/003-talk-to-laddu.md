@@ -1,6 +1,6 @@
 # 003: Talk to Laddu (voice)
 
-**Status:** Draft with Nisha's answers (2026-11-10), waiting for approval
+**Status:** ✅ Approved by Nisha (2026-11-11)
 **Phase:** 5 (SCOPING.md §10), moved up: after 3b (Laddu v1.1), before going live
 **Based on:** SCOPING §0 (Speak mode, captions, 🔊/🔇, slow/replay), the
 2026-11-10 feedback ("voice has to be a key part"; "Laddu's whole body, his
