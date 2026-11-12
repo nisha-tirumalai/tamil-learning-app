@@ -40,11 +40,11 @@ describe("choose your avatar", () => {
 describe("my bubble uses my avatar", () => {
   test("guy", () => {
     const out = html(<AvatarProvider avatar="guy"><Me /></AvatarProvider>);
-    expect(out).toContain("#f2c230");   // the guy's yellow shirt
+    expect(out).toContain("#1f1a1a");   // the guy's messy black hair
   });
   test("girl", () => {
     const out = html(<AvatarProvider avatar="girl"><Me /></AvatarProvider>);
-    expect(out).not.toContain("#f2c230");
+    expect(out).not.toContain("#1f1a1a");
     expect(out).toContain('aria-label="You"');
   });
 });

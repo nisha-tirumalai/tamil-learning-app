@@ -11,7 +11,7 @@ export function AvatarPicker({ current, next }: { current: Avatar | null; next: 
       {AVATARS.map((a) => (
         <button key={a} type="submit" name="avatar" value={a}
           className={a === current ? "avatar-choice chosen" : "avatar-choice"} aria-pressed={a === current}>
-          <Character avatar={a} size={120} />
+          <Character avatar={a} size={130} crop="bust" />
           <span>{AVATAR_LABELS[a]}</span>
         </button>
       ))}

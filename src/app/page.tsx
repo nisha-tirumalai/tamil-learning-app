@@ -16,7 +16,7 @@ export default async function Welcome() {
   const name = firstName(profile?.display_name);
   return (
     <div className="welcome">
-      <Laddu size={150} />
+      <Laddu size={140} crop="full" eyes="happy" />
       <div className="bubble big">
         <p className="tanglish">{WELCOME.tanglish(name)}</p>
         <p className="english">{WELCOME.english(name)}</p>
