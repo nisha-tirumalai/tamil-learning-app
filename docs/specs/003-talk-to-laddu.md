@@ -137,6 +137,26 @@ spec. Hearing and voice can come from different services.
       right to use); they're the style guide. They stay out of the public repo
       unless she says otherwise; only the finished drawings go in.
 
+**After the first phone test (added 2026-11-12)**
+
+Test result: hold-to-talk worked on laptop Chrome but **not on iPhone** (no
+recording ever reached the server). A spoken turn took **~15 s** (13.4 s until
+the reply, +1.4 s for the voice); a typed turn ~11.6 s. Charlie's first line
+sounded great; the second had an English accent.
+- [ ] **Hold to talk works on iPhone Safari** (press not cut short by Safari's
+      text-selection menu; recording format iPhone can make; tested on a real iPhone).
+- [ ] **The conversation comes first.** After I let go of 🎤: hear me → Laddu's
+      reply starts right away → his voice starts as soon as his first sentence
+      is ready. My bubble text and the ⭐ score happen **in the background** and
+      never hold up Laddu. Target: Laddu starts talking within **3 s** of letting
+      go (typical, Wi-Fi). Use the call log to find which steps are slow.
+- [ ] **Charlie always sounds the same:** the voice is always given the Tamil-
+      script line (never the Tanglish), and the language is set to Tamil where
+      the voice model allows it (consider ElevenLabs Flash, which is faster).
+- [ ] **Low score hint:** if my score comes back **below 7**, a small hint
+      appears near my bubble: "💡 Try: …" with the better way (English on ⓘ).
+      It doesn't interrupt the conversation.
+
 **Rules that always hold**
 - [ ] **Every external call is logged** (added 2026-11-12): each call to Claude,
       ElevenLabs or Azure writes one private row to a log table in Supabase:
