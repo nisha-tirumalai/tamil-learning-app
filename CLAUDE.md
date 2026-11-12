@@ -12,6 +12,8 @@
   is public. `.env*` stays gitignored. Before every commit, check that no keys are staged.
 - **Never show Tamil script in the UI.** Store it only for text-to-speech; show
   Tanglish + English. Default to spoken (colloquial) Tamil.
+- **Bug log:** when a bug is found or fixed, update [docs/BUGS.md](docs/BUGS.md)
+  (what happened, why, how it was fixed).
 - Commit after each working step, then push.
 - Commands: `npm run dev` (app on port 3000), `npm test` (no database),
   `npm run test:db` (starts a local Supabase in Docker, runs all tests),
