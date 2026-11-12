@@ -104,6 +104,11 @@ spec. Hearing and voice can come from different services.
 - [ ] My ⭐ chip sits on the corner of my bubble; tapping it opens the card as a
       panel over the scene (spec 002 contents). Tapping Laddu's bubble shows its
       English.
+- [ ] **ⓘ button on Laddu's bubble** (added 2026-11-12): tapping it opens a
+      small card with the English of what he just said, so I can always find it
+      (tapping the bubble still works too). The English is already saved with
+      every reply, so this makes **no extra AI or voice calls**. Text only; a
+      "hear it in English" button could come later.
 - [ ] **Earlier lines** are one tap away: a small "📜 Earlier" button opens the
       full conversation as a list (same as Past chats). The scene itself stays clean.
 - [ ] Works on a phone held upright: the two characters fit side by side, and
