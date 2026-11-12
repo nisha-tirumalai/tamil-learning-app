@@ -146,7 +146,8 @@ export function useHoldToTalk({ onDone, onProblem }: {
       if (peak < VOICE_CONFIG.recording.minPeak) return handlers.current.onProblem(HEARING_ERROR_TEXT, "quiet");
       handlers.current.onDone({ audio, ms, peak });
     };
-    recorder.start(250);
+    // One piece at the end (no time slices): older iPhones make broken files from slices.
+    recorder.start();
     setState("recording");
   }, [stop]);
 

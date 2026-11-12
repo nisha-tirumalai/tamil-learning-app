@@ -73,14 +73,14 @@ export function elevenlabsHearing(): HearingService {
 }
 
 export function elevenlabsVoice(): VoiceService {
-  const { voiceId, voiceName, voiceModel } = VOICE_CONFIG.elevenlabs;
+  const { voiceId, voiceName, voiceModel, voiceLanguage } = VOICE_CONFIG.elevenlabs;
   return {
     id: "elevenlabs", model: `${voiceName} · ${voiceModel}`,
     async speak(text) {
       const res = await ok(await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_64`, {
         method: "POST",
         headers: { "xi-api-key": key("ELEVEN_LABS_API_KEY"), "content-type": "application/json" },
-        body: JSON.stringify({ text, model_id: voiceModel }),
+        body: JSON.stringify({ text, model_id: voiceModel, language_code: voiceLanguage }),
         signal: timeout(),
       }), "ElevenLabs voice");
       return res.arrayBuffer();

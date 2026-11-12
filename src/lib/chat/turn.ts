@@ -253,6 +253,7 @@ export async function rescore(db: Db, model: ChatModel, messageId: number): Prom
 
 export type ReplyEvent =
   | { t: "delta"; text: string }
+  | { t: "voice"; key: string }                     // spec 003: his voice is being made; fetch /api/speech/<key>
   | { t: "reset" }                                  // throw away what was shown so far
   | { t: "done"; id: number; text: string; english: string }
   | { t: "cap" }
@@ -270,20 +271,30 @@ export function splitReply(raw: string): { text: string; english: string; tamil:
 }
 
 /**
- * The part of a reply (so far) that may be shown while it streams: his first
- * two lines. The third line, Tamil script for his voice, is held back.
+ * Reads a reply as it streams in (spec 003). Laddu writes a hidden line in
+ * Tamil script (for his voice; first, in tutor prompt v4) plus his Tanglish and
+ * English lines. A line is hidden if its first letter is Tamil script; every
+ * other line may be shown. `voiceLine` is the hidden line once it's complete.
+ * A line with no letters yet is held back until we know which kind it is.
  */
+export function readReply(raw: string, finished = false): { visible: string; voiceLine: string | null } {
+  const lines = raw.split("\n");
+  const visible: string[] = [];
+  let voiceLine: string | null = null;
+  lines.forEach((line, i) => {
+    const complete = finished || i < lines.length - 1;
+    const first = line.match(/\p{L}/u)?.[0];
+    if (!first) { if (complete && visible.length) visible.push(line); return; }   // no blank lines at the start
+    if (hasTamilScript(first)) { if (complete && voiceLine === null) voiceLine = line.trim(); return; }
+    visible.push(line);
+  });
+  // Drop a trailing line we can't place yet (no letters), so `visible` only ever grows.
+  return { visible: visible.join("\n").replace(/\n+$/, (m) => (finished ? "" : m)), voiceLine };
+}
+
+/** The part of a reply (so far) that may be shown: everything except the hidden Tamil-script line. */
 export function visiblePart(raw: string): string {
-  let lines = 0;
-  for (let i = 0; i < raw.length;) {
-    const nl = raw.indexOf("\n", i);
-    const line = nl === -1 ? raw.slice(i) : raw.slice(i, nl);
-    if (line.trim()) lines++;
-    if (nl === -1) return raw;
-    if (lines === 2) return raw.slice(0, nl);
-    i = nl + 1;
-  }
-  return raw;
+  return readReply(raw).visible;
 }
 
 /**
@@ -318,6 +329,17 @@ export function tutorTurns(rows: MessageRow[], heardTurn?: string): Turn[] {
   return turns;
 }
 
+/** Tamil script for one of Laddu's Tanglish lines, if he didn't write it himself. null = couldn't. */
+async function tamilFor(model: ChatModel, tanglish: string): Promise<string | null> {
+  try {
+    const out = (await model.tamilScript({ system: loadPrompt(CHAT_CONFIG.prompts.tamilScript, {}), text: tanglish })).trim();
+    return hasTamilScript(out) ? out.split("\n")[0].trim() : null;
+  } catch (e) {
+    console.warn("Tamil-script line failed:", (e as Error).message);
+    return null;
+  }
+}
+
 /** Added to what I said out loud, which may be in Tamil script (speech-to-text writes it that way). */
 export const HEARD_NOTE = "Said out loud; this is what speech-to-text heard. Reply in Tanglish as always.";
 
@@ -346,6 +368,11 @@ export async function* replyStream(
     heardTurn?: string;
     /** Laddu's line is saved only after this (so it lands after my message). */
     beforeSave?: Promise<unknown>;
+    /**
+     * Called as soon as his hidden Tamil-script line is complete, to start his
+     * voice early. Returns a key the phone can fetch the audio with, or null.
+     */
+    onVoiceLine?: (tamil: string) => string | null;
   } = {},
 ): AsyncGenerator<ReplyEvent> {
   const conversation = await loadConversation(db, conversationId);
@@ -361,10 +388,17 @@ export async function* replyStream(
     let full = "";
     let shown = "";
     let tamil = false;
+    let voiceStarted = false;
     try {
       for await (const piece of model.reply({ system, messages, job: opening ? "opener" : "reply" })) {
         full += piece;
-        const visible = visiblePart(full);
+        const { visible, voiceLine } = readReply(full);
+        if (voiceLine && !voiceStarted) {
+          voiceStarted = true;
+          const key = opts.onVoiceLine?.(voiceLine);
+          if (key) yield { t: "voice", key };
+        }
+        if (!visible.startsWith(shown)) { tamil = true; break; }   // shouldn't happen; treat like a bad answer
         const add = visible.slice(shown.length);
         if (!add) continue;
         if (hasTamilScript(add)) { tamil = true; break; }
@@ -381,9 +415,20 @@ export async function* replyStream(
       if (shown) yield { t: "reset" };
       continue;
     }
-    const { text, english, tamil: forVoice } = splitReply(full);
+    const { text, english, tamil: written } = splitReply(full);
     if (!text) { yield { t: "error", message: ERROR_TEXT }; return; }
-    if (!forVoice && !hasTamilScript(text)) console.warn("Laddu's reply had no Tamil-script line: his voice will read the Tanglish (English-sounding accent).");
+    // Charlie must always read Tamil script, never Tanglish (an English voice
+    // reading English letters sounds English). If Laddu left it out, write it now.
+    let forVoice = written;
+    if (!forVoice && english) {   // (a safety reply is one English line: that one is read as it is)
+      console.warn("Laddu's reply had no Tamil-script line; writing one for his voice");
+      forVoice = await tamilFor(model, text);
+    }
+    if (forVoice && !voiceStarted) {
+      voiceStarted = true;
+      const key = opts.onVoiceLine?.(forVoice);
+      if (key) yield { t: "voice", key };
+    }
     try { await opts.beforeSave; } catch { yield { t: "error", message: ERROR_TEXT }; return; }
     const { data, error } = await db.from("messages")
       .insert({ conversation_id: conversationId, role: "laddu", text, english: english || null, tamil: forVoice })
@@ -415,7 +460,8 @@ export type TurnEvent =
  * "error" (tap to retry), and the score still arrives.
  */
 export async function* sendTurn(
-  db: Db, model: ChatModel, input: { conversationId: string; text: string; displayName: string | null },
+  db: Db, model: ChatModel,
+  input: { conversationId: string; text: string; displayName: string | null; onVoiceLine?: (tamil: string) => string | null },
 ): AsyncGenerator<TurnEvent> {
   const text = input.text.trim().slice(0, 2000);
   if (!text) { yield { t: "error", message: "Type a message first." }; return; }
@@ -426,12 +472,13 @@ export async function* sendTurn(
   if (error || !data) { yield { t: "error", message: ERROR_TEXT }; return; }
   const messageId = data.id as number;
   yield { t: "saved", messageId };
-  yield* replyAndScore(db, model, input.conversationId, messageId, input.displayName);
+  yield* replyAndScore(db, model, input.conversationId, messageId, input.displayName, input.onVoiceLine);
 }
 
 /** After my message is saved: Laddu's reply and the score, at the same time. */
 async function* replyAndScore(
   db: Db, model: ChatModel, conversationId: string, messageId: number, displayName: string | null,
+  onVoiceLine?: (tamil: string) => string | null,
 ): AsyncGenerator<TurnEvent> {
   // Both jobs push into one queue; this loop hands events out in arrival order.
   const queue: TurnEvent[] = [];
@@ -444,7 +491,7 @@ async function* replyAndScore(
     (e) => { console.warn("score failed:", (e as Error).message); push({ t: "score_error", messageId }); },
   );
   const replying = (async () => {
-    for await (const e of replyStream(db, model, conversationId, displayName)) push(e);
+    for await (const e of replyStream(db, model, conversationId, displayName, { onVoiceLine })) push(e);
   })().catch((e) => { console.warn("reply failed:", (e as Error).message); push({ t: "error", message: ERROR_TEXT }); });
   void Promise.all([scoring, replying]).then(() => { finished = true; wake?.(); });
 
@@ -469,7 +516,10 @@ const PROBLEM_TEXT: Record<RecordingProblem, string> = {
  */
 export async function* talkTurn(
   db: Db, model: ChatModel, hearing: HearingService[],
-  input: { conversationId: string; recording: Recording; peak: number; displayName: string | null },
+  input: {
+    conversationId: string; recording: Recording; peak: number; displayName: string | null;
+    onVoiceLine?: (tamil: string) => string | null;
+  },
   log?: CallLog,
 ): AsyncGenerator<TurnEvent> {
   const { recording } = input;
@@ -486,38 +536,37 @@ export async function* talkTurn(
   }
   if (!raw) { yield { t: "hearing_error", problem: "silent", message: HEARING_ERROR_TEXT }; return; }
 
-  // To save time, Laddu starts replying to what was heard right away, while the
-  // Tanglish version for my bubble is made. His events wait in the queue until
-  // my bubble is out, and his line is saved only after mine.
+  // The conversation comes first: Laddu starts replying to what was heard
+  // right away, and his events go straight out. The Tanglish version for my
+  // bubble and my score are made at the same time, in the background. His line
+  // is saved only after mine, so the chat stays in order.
   let mineSaved!: (ok: boolean) => void;
   const saved = new Promise<void>((resolve, reject) => { mineSaved = (ok) => (ok ? resolve() : reject(new Error("not saved"))); });
   saved.catch(() => {});
   const queue: TurnEvent[] = [];
   let wake: (() => void) | null = null;
-  let running = 1;
+  let running = 2;
   const push = (e: TurnEvent) => { queue.push(e); wake?.(); wake = null; };
   const finished = () => { running--; wake?.(); wake = null; };
+
   void (async () => {
-    for await (const e of replyStream(db, model, input.conversationId, input.displayName, { heardTurn: raw, beforeSave: saved })) push(e);
+    const opts = { heardTurn: raw, beforeSave: saved, onVoiceLine: input.onVoiceLine };
+    for await (const e of replyStream(db, model, input.conversationId, input.displayName, opts)) push(e);
   })().catch((e) => { console.warn("reply failed:", (e as Error).message); push({ t: "error", message: ERROR_TEXT }); }).finally(finished);
 
-  const text = (await toTanglish(model, raw)).slice(0, 2000);
-  if (!text) { mineSaved(false); yield { t: "hearing_error", problem: "silent", message: HEARING_ERROR_TEXT }; return; }
-  yield { t: "heard", text };
-
-  const { data, error } = await db.from("messages")
-    .insert({ conversation_id: input.conversationId, role: "me", text, heard: text, spoken: true })
-    .select("id").single();
-  if (error || !data) { mineSaved(false); yield { t: "error", message: ERROR_TEXT }; return; }
-  const messageId = data.id as number;
-  yield { t: "saved", messageId };
-  mineSaved(true);
-
-  running++;
-  scoreMessage(db, model, messageId).then(
-    (r) => push(r.ok ? { t: "score", messageId, score: r.score } : { t: "score_error", messageId }),
-    (e) => { console.warn("score failed:", (e as Error).message); push({ t: "score_error", messageId }); },
-  ).finally(finished);
+  void (async () => {
+    const text = (await toTanglish(model, raw)).slice(0, 2000) || "(…)";   // never the raw text: it may be Tamil script
+    push({ t: "heard", text });
+    const { data, error } = await db.from("messages")
+      .insert({ conversation_id: input.conversationId, role: "me", text, heard: text, spoken: true })
+      .select("id").single();
+    if (error || !data) { mineSaved(false); return; }   // Laddu's reply then fails too: "tap to try again"
+    const messageId = data.id as number;
+    push({ t: "saved", messageId });
+    mineSaved(true);
+    const r = await scoreMessage(db, model, messageId).catch(() => null);
+    push(r?.ok ? { t: "score", messageId, score: r.score } : { t: "score_error", messageId });
+  })().catch((e) => { console.warn("saving my words failed:", (e as Error).message); mineSaved(false); }).finally(finished);
 
   for (;;) {
     while (queue.length) yield queue.shift()!;

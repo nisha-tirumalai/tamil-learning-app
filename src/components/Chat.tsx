@@ -79,7 +79,7 @@ function LiveChat({ conversationId, initial, opener, title }: {
   const player = useRef<VoicePlayer | null>(null);
   const [, refresh] = useReducer((n: number) => n + 1, 0);
   const [ladduLevel, setLadduLevel] = useState(0);
-  const [waitingForTap, setWaitingForTap] = useState<number | null>(null);   // a line to speak once sound is allowed
+  const [waitingForTap, setWaitingForTap] = useState<number | string | null>(null);   // a line to speak once sound is allowed
   useEffect(() => {
     const p = voicePlayer();
     player.current = p;
@@ -88,7 +88,7 @@ function LiveChat({ conversationId, initial, opener, title }: {
     refresh();
     return () => { p.stop(); p.onLevel = () => {}; p.onChange = () => {}; };
   }, []);
-  const speak = useCallback(async (id: number, rate = 1) => {
+  const speak = useCallback(async (id: number | string, rate = 1) => {
     const p = player.current;
     if (!p || p.muted) return;
     if (!p.unlocked) { setWaitingForTap(id); return; }
@@ -124,8 +124,11 @@ function LiveChat({ conversationId, initial, opener, title }: {
       markPending(tempId, true);
       setStatus({ kind: "replying", raw: "" });
     } else {
+      // My bubble shows dots until the Tanglish of what I said arrives (Laddu doesn't wait for it).
+      setItems((prev) => [...prev, { type: "me", id: tempId, attempts: [{ id: tempId, text: "", meant: null, score: null, spoken: true }] }]);
       setStatus({ kind: "hearing" });
     }
+    let voiceKey: string | null = null;
 
     let saved: number | null = null;
     let raw = "";
@@ -143,11 +146,12 @@ function LiveChat({ conversationId, initial, opener, title }: {
       await readEvents(await request(), (e) => {
         switch (e.t) {
           case "heard":
-            setItems((prev) => [...prev, { type: "me", id: tempId, attempts: [{ id: tempId, text: e.text, meant: null, score: null, spoken: true }] }]);
-            markPending(tempId, true);
-            setStatus({ kind: "replying", raw: "" });
+            updateAttempt(saved ?? tempId, (a) => ({ ...a, text: e.text }));
+            markPending(saved ?? tempId, true);
+            setStatus((s) => (s.kind === "hearing" ? { kind: "replying", raw: "" } : s));
             break;
-          case "hearing_error": over = true; setStatus({ kind: "notice", message: e.message, detail: e.problem }); break;
+          case "hearing_error": over = true; removeItem(tempId); setStatus({ kind: "notice", message: e.message, detail: e.problem }); break;
+          case "voice": voiceKey = e.key; void speak(e.key); break;
           case "saved": {
             const id = e.messageId;
             saved = id;
@@ -157,8 +161,11 @@ function LiveChat({ conversationId, initial, opener, title }: {
             break;
           }
           case "delta": raw += e.text; setStatus({ kind: "replying", raw }); break;
-          case "reset": raw = ""; setStatus({ kind: "replying", raw }); break;
-          case "done": over = true; addLaddu(e.id, e.text, e.english); setStatus({ kind: "idle" }); void speak(e.id); break;
+          case "reset": raw = ""; player.current?.stop(); setStatus({ kind: "replying", raw }); break;
+          case "done":
+            over = true; addLaddu(e.id, e.text, e.english); setStatus({ kind: "idle" });
+            if (voiceKey) player.current?.alias(e.id, voiceKey); else void speak(e.id);
+            break;
           case "error": over = true; failReply(); break;
           case "cap": over = true; removeItem(tempId); setStatus({ kind: "cap" }); break;
           case "score": setScore(e.messageId, e.score); markPending(e.messageId, false); break;
@@ -172,7 +179,7 @@ function LiveChat({ conversationId, initial, opener, title }: {
     markPending(tempId, false);
     if (saved !== null) markPending(saved, false);
     if (!over) {
-      if (spoken && saved === null) setStatus({ kind: "notice", message: HEARING_ERROR_TEXT, detail: "no-answer" });
+      if (spoken && saved === null) { removeItem(tempId); setStatus({ kind: "notice", message: HEARING_ERROR_TEXT, detail: "no-answer" }); }
       else failReply();
     }
   }
@@ -202,16 +209,21 @@ function LiveChat({ conversationId, initial, opener, title }: {
     setStatus({ kind: "replying", raw: "" });
     let raw = "";
     let over = false;
+    let voiceKey: string | null = null;
     try {
       const response = await fetch(`/api/chat/${conversationId}/reply`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ voice: wantVoice() }),
       });
       await readEvents(response, (e) => {
         if (e.t === "delta") { raw += e.text; setStatus({ kind: "replying", raw }); }
-        if (e.t === "reset") { raw = ""; setStatus({ kind: "replying", raw }); }
+        if (e.t === "reset") { raw = ""; player.current?.stop(); setStatus({ kind: "replying", raw }); }
+        if (e.t === "voice") { voiceKey = e.key; void speak(e.key); }
         if (e.t === "cap") { over = true; setStatus({ kind: "cap" }); }
         if (e.t === "error") { over = true; setStatus({ kind: "error", message: e.message, retry: () => void reply() }); }
-        if (e.t === "done") { over = true; addLaddu(e.id, e.text, e.english); setStatus({ kind: "idle" }); void speak(e.id); }
+        if (e.t === "done") {
+          over = true; addLaddu(e.id, e.text, e.english); setStatus({ kind: "idle" });
+          if (voiceKey) player.current?.alias(e.id, voiceKey); else void speak(e.id);
+        }
       });
     } catch (err) {
       console.warn("reply failed:", (err as Error).message);

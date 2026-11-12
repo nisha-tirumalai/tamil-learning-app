@@ -9,7 +9,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type Service = "claude" | "elevenlabs" | "azure";
 /** What the call was for. */
-export type Job = "score" | "reply" | "opener" | "tanglish" | "hearing" | "voice";
+export type Job = "score" | "reply" | "opener" | "tanglish" | "tamil" | "hearing" | "voice";
 
 export interface CallEntry {
   service: Service;

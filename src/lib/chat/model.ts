@@ -23,6 +23,8 @@ export interface ChatModel {
   reply(req: { system: string; messages: Turn[]; job?: "reply" | "opener" }): AsyncIterable<string>;
   /** Rewrites a transcript as Tanglish (returns plain text). */
   tanglish(req: { system: string; text: string }): Promise<string>;
+  /** Writes one of Laddu's Tanglish lines in Tamil script, for his voice (returns plain text). */
+  tamilScript(req: { system: string; text: string }): Promise<string>;
 }
 
 /** Fill {{placeholders}} in a prompt file from prompts/. */
@@ -125,27 +127,30 @@ export function anthropicModel(log: CallLog = noLog): ChatModel {
         }
       }
     },
-    async tanglish({ system, text }) {
-      const watch = stopwatch();
-      let usage: Usage | null = null;
-      try {
-        const response = await c.messages.create({
-          model,
-          max_tokens: 1000,
-          system,
-          messages: [{ role: "user", content: `Transcript: ${text}` }],
-          output_config: { effort: "low" },
-        });
-        usage = response.usage;
-        if (response.stop_reason === "refusal") throw new Error("The model declined this transcript.");
-        record("tanglish", watch, usage);
-        return response.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
-      } catch (e) {
-        record("tanglish", watch, usage, e);
-        throw e;
-      }
-    },
+    tanglish: ({ system, text }) => plain("tanglish", system, `Transcript: ${text}`),
+    tamilScript: ({ system, text }) => plain("tamil", system, text),
   };
+
+  async function plain(job: "tanglish" | "tamil", system: string, content: string): Promise<string> {
+    const watch = stopwatch();
+    let usage: Usage | null = null;
+    try {
+      const response = await c.messages.create({
+        model,
+        max_tokens: 1000,
+        system,
+        messages: [{ role: "user", content }],
+        output_config: { effort: "low" },
+      });
+      usage = response.usage;
+      if (response.stop_reason === "refusal") throw new Error("The model declined this.");
+      record(job, watch, usage);
+      return response.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
+    } catch (e) {
+      record(job, watch, usage, e);
+      throw e;
+    }
+  }
 }
 
 /**
@@ -177,6 +182,16 @@ export class FakeModel implements ChatModel {
     const next = this.tanglishAnswers.shift();
     if (next instanceof Error) throw next;
     return next ?? req.text;
+  }
+
+  tamilCalls: { system: string; text: string }[] = [];
+  /** Answers for tamilScript(), in order. Empty = "(no answer)" → no Tamil line. */
+  tamilAnswers: (string | Error)[] = [];
+  async tamilScript(req: { system: string; text: string }) {
+    this.tamilCalls.push(req);
+    const next = this.tamilAnswers.shift();
+    if (next instanceof Error) throw next;
+    return next ?? "";
   }
 
   async *reply(req: { system: string; messages: Turn[]; job?: "reply" | "opener" }) {

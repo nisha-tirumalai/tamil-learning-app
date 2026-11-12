@@ -315,3 +315,7 @@ button.speech.tappable { padding: 0.45rem 0.8rem; }
 .english-card p { margin: 0.1rem 0 0; }
 .english-card-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
 .english-card .link-button { position: absolute; top: 0.25rem; right: 0.5rem; margin: 0; }
+
+/* iPhone: holding the mic must never open Safari's text-selection or "copy" menu (it cuts the press short). */
+.talk-bar, .talk-bar * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.mic * { pointer-events: none; }

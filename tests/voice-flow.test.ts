@@ -10,7 +10,7 @@ import {
   fixHeard, getConversation, replyStream, sendTurn, startConversation, talkTurn, type TurnEvent, voiceText,
 } from "@/lib/chat/turn";
 import { HEARING_ERROR_TEXT, TOO_LONG_TEXT, TOO_SHORT_TEXT } from "@/lib/voice/config";
-import { takeVoice, withEarlyVoice } from "@/lib/voice/prepared";
+import { earlyVoice, takeVoice } from "@/lib/voice/prepared";
 import { FakeVoice } from "@/lib/voice/services";
 import { FakeHearing } from "@/lib/voice/services";
 import { goodAnswer } from "./fixtures";
@@ -31,7 +31,8 @@ async function collect(events: AsyncIterable<TurnEvent>) {
 }
 const answer = (over: Record<string, unknown> = {}) => ({ ...goodAnswer, ...over });
 const audio = (bytes = 20_000) => new Blob([new Uint8Array(bytes)], { type: "audio/webm" });
-const REPLY = "Ooh, Mysore pak-aa! Evlo venum?\nOoh, Mysore pak! How much do you need?\nஓ, மைசூர் பாக்கா! எவ்ளோ வேணும்?";
+// Tutor v4 order: the hidden Tamil-script line first, then Tanglish, then English.
+const REPLY = "ஓ, மைசூர் பாக்கா! எவ்ளோ வேணும்?\nOoh, Mysore pak-aa! Evlo venum?\nOoh, Mysore pak! How much do you need?";
 
 describe.skipIf(!configured)("talking to Laddu (fake services)", () => {
   let admin: SupabaseClient, db: SupabaseClient, userId = "";
@@ -76,7 +77,7 @@ describe.skipIf(!configured)("talking to Laddu (fake services)", () => {
     expect(model.replyCalls[0].messages.at(-1)!.content).toContain("நான் கொஞ்சம் ஸ்வீட்ஸ் சமைக்கிறேன்");
     const order = events.map((e) => e.t);
     expect(order.indexOf("heard")).toBeLessThan(order.indexOf("saved"));
-    expect(order.indexOf("saved")).toBeLessThan(order.indexOf("delta"));
+    expect(order.indexOf("saved")).toBeLessThan(order.indexOf("done"));   // his line is saved after mine
     expect(model.scoreCalls[0].message).toContain("Naan konjam sweets samaikkiren");
 
     // Saved: my spoken message (with what was heard), Laddu's hidden Tamil line.
@@ -180,21 +181,41 @@ describe.skipIf(!configured)("talking to Laddu (fake services)", () => {
     expect(log.entries).toEqual([expect.objectContaining({ job: "hearing", audio_seconds: 4, ok: true })]);
     expect(JSON.stringify(log.entries)).not.toContain("secret");
   });
-  test("Laddu's voice starts early when wanted; muted = no voice call", async () => {
-    const convo = await startConversation(db, "laddu");
+  test("Laddu's voice starts as soon as his Tamil line is written (before his caption); muted = no voice call", async () => {
     const voice = new FakeVoice();
-    const muted = await collect(withEarlyVoice(replyStream(db, new FakeModel([], [REPLY]), convo.id, "Nisha"), db, false, memoryLog(), () => voice) as never);
-    await new Promise((r) => setTimeout(r, 50));
+    const convo = await startConversation(db, "laddu");
+    const muted = await collect(replyStream(db, new FakeModel([], [REPLY]), convo.id, "Nisha", { onVoiceLine: earlyVoice(userId, false, memoryLog(), () => voice) }));
+    expect(muted.map((e) => e.t)).not.toContain("voice");
     expect(voice.calls).toEqual([]);
-    expect(takeVoice((muted.at(-1) as { id: number }).id)).toBeNull();
 
     const convo2 = await startConversation(db, "laddu");
     const log = memoryLog();
-    const events = await collect(withEarlyVoice(replyStream(db, new FakeModel([], [REPLY]), convo2.id, "Nisha"), db, true, log, () => voice) as never);
-    const id = (events.at(-1) as { id: number }).id;
-    const audio = await takeVoice(id);
-    expect(new TextDecoder().decode(audio!)).toBe("mp3:ஓ, மைசூர் பாக்கா! எவ்ளோ வேணும்?");   // the hidden Tamil line
-    expect(takeVoice(id)).toBeNull();   // handed out once
+    const events = await collect(replyStream(db, new FakeModel([], [REPLY]), convo2.id, "Nisha", { onVoiceLine: earlyVoice(userId, true, log, () => voice) }));
+    const kinds = events.map((e) => e.t);
+    expect(kinds.indexOf("voice")).toBeLessThan(kinds.indexOf("delta"));   // talking starts before the caption
+    const key = (events.find((e) => e.t === "voice") as { key: string }).key;
+    expect(JSON.stringify(events)).not.toMatch(/[஀-௿]/);                // the key carries no Tamil script
+    expect(new TextDecoder().decode((await takeVoice(userId, key))!)).toBe("mp3:ஓ, மைசூர் பாக்கா! எவ்ளோ வேணும்?");
+    expect(takeVoice("someone-else", key)).toBeNull();                      // only for me
     expect(log.entries).toEqual([expect.objectContaining({ job: "voice", ok: true })]);
+  });
+
+  test("Charlie never reads Tanglish: if Laddu forgets the Tamil line, it's written for him", async () => {
+    const convo = await startConversation(db, "laddu");
+    const model = new FakeModel([], ["Sari! Innum enna venum?\nOkay! What else do you need?"]);
+    model.tamilAnswers = ["சரி! இன்னும் என்ன வேணும்?"];
+    const events = await collect(replyStream(db, model, convo.id, "Nisha"));
+    const done = events.at(-1) as { id: number };
+    expect(model.tamilCalls[0].text).toBe("Sari! Innum enna venum?");
+    expect(await voiceText(db, done.id)).toBe("சரி! இன்னும் என்ன வேணும்?");
+  });
+
+  test("a safety reply (one English line) is read as it is, not turned into Tamil", async () => {
+    const convo = await startConversation(db, "me");
+    const model = new FakeModel([answer()], ["I'm really glad you told me. Please call or text 988."]);
+    const events = await collect(sendTurn(db, model, { conversationId: convo.id, text: "x", displayName: null }));
+    const done = events.find((e) => e.t === "done") as { id: number };
+    expect(model.tamilCalls).toHaveLength(0);
+    expect(await voiceText(db, done.id)).toContain("988");
   });
 });

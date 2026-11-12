@@ -19,6 +19,7 @@ decisions. Update it at the end of every phase.
 
 ## Where we are (2026-11-12)
 
+- **2026-11-12, after the first phone test:** fixes for bugs 6–9 (see [BUGS.md](BUGS.md)): iPhone mic, scene background as in the approved draft, reply-first speed (tutor prompt **v4**: hidden Tamil line first; voice started by key the moment it's written, `src/lib/voice/prepared.ts`; spoken turns reply to what was heard while the bubble text and score run in the background), Charlie always reads Tamil script (`tamilScript` fallback, `language_code: "ta"`). No new migration. **Still to build from the spec's new items:** the welcome screen where Laddu introduces himself, and the low-score "💡 Try: …" hint. **Open choice for Nisha:** ElevenLabs Flash (faster) vs multilingual v2 (her pick) for Charlie.
 - **2026-11-12: Spec 003 (voice) built, waiting for Nisha's on-phone check.** All 126 tests pass (`npm run test:db`); live check of ElevenLabs (hearing + Charlie) and Azure hearing with iPhone (m4a) and Chrome (webm) audio: all worked. Needs Nisha:
   1. **Paste `supabase/migrations/20261113000000_voice.sql` into the Supabase SQL Editor and Run** (and `20261112000000_avatar.sql` first, if not done yet).
   2. Restart `npm run dev`, make port 3000 visible to her phone, then the spec's manual test: 10 spoken messages in a Laddu-starts situation.

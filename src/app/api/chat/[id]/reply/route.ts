@@ -4,7 +4,7 @@
 import { dbLog } from "@/lib/calls";
 import { anthropicModel } from "@/lib/chat/model";
 import { ndjsonResponse } from "@/lib/chat/stream";
-import { withEarlyVoice } from "@/lib/voice/prepared";
+import { earlyVoice } from "@/lib/voice/prepared";
 import { replyStream } from "@/lib/chat/turn";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,7 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { data: profile } = await db.from("profiles").select("display_name").eq("id", user.id).single();
   const log = dbLog(db);
   const { voice } = (await request.json().catch(() => ({}))) as { voice?: unknown };
-  return ndjsonResponse(() => withEarlyVoice(
-    replyStream(db, anthropicModel(log), id, profile?.display_name ?? null), db, voice === true, log,
-  ), log.flush);
+  return ndjsonResponse(() => replyStream(db, anthropicModel(log), id, profile?.display_name ?? null, {
+    onVoiceLine: earlyVoice(user.id, voice === true, log),
+  }), log.flush);
 }

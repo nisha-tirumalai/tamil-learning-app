@@ -19,7 +19,8 @@ export interface AudioLike {
 }
 
 export interface PlayerDeps {
-  fetchAudio(messageId: number): Promise<Blob>;
+  /** `ref` is a saved line's id, or a key for a voice started early. */
+  fetchAudio(ref: string): Promise<Blob>;
   createAudio(): AudioLike;
   toUrl(blob: Blob): string;
   storage?: { get(key: string): string | null; set(key: string, value: string): void };
@@ -37,12 +38,12 @@ export class VoicePlayer {
   muted: boolean;
   unlocked = false;
   /** The line playing now, or null. */
-  playing: number | null = null;
+  playing: string | null = null;
   onLevel: (level: number) => void = () => {};
   onChange: () => void = () => {};
 
   private audio: AudioLike | null = null;
-  private cache = new Map<number, Promise<string>>();
+  private cache = new Map<string, Promise<string>>();
   private level: (() => number) | null = null;
   private meterTried = false;
   private run = 0;
@@ -80,15 +81,22 @@ export class VoicePlayer {
     this.onChange();
   }
 
+  /** The audio fetched by an early key also belongs to the saved line (for 🔁 Again and 🐢 Slow). */
+  alias(messageId: number, key: string) {
+    const url = this.cache.get(key);
+    if (url) this.cache.set(String(messageId), url);
+  }
+
   /** Fetches (once) and plays one of Laddu's lines. false = didn't play (muted, locked or failed). */
-  async play(messageId: number, rate = 1): Promise<boolean> {
+  async play(line: number | string, rate = 1): Promise<boolean> {
     if (this.muted || !this.unlocked) return false;
+    const ref = String(line);
     const run = ++this.run;
-    let url = this.cache.get(messageId);
+    let url = this.cache.get(ref);
     if (!url) {
-      url = this.deps.fetchAudio(messageId).then((b) => this.deps.toUrl(b));
-      this.cache.set(messageId, url);
-      url.catch(() => this.cache.delete(messageId));
+      url = this.deps.fetchAudio(ref).then((b) => this.deps.toUrl(b));
+      this.cache.set(ref, url);
+      url.catch(() => this.cache.delete(ref));
     }
     let src: string;
     try { src = await url; } catch { return false; }
@@ -106,7 +114,7 @@ export class VoicePlayer {
     const finish = () => { if (run === this.run) this.end(); };
     a.onended = finish;
     a.onerror = finish;
-    this.playing = messageId;
+    this.playing = ref;
     this.onChange();
     try {
       await a.play();
@@ -172,8 +180,8 @@ function audioContext(): AudioContext | null {
 export function voicePlayer(): VoicePlayer {
   if (shared) return shared;
   shared = new VoicePlayer({
-    async fetchAudio(id) {
-      const res = await fetch(`/api/speech/${id}`);
+    async fetchAudio(ref) {
+      const res = await fetch(`/api/speech/${encodeURIComponent(ref)}`);
       if (!res.ok) throw new Error(`voice ${res.status}`);
       return res.blob();
     },

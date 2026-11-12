@@ -118,7 +118,7 @@ class FakeAudio implements AudioLike {
 }
 
 function fakePlayer(saved: string | null = null) {
-  const fetched: number[] = [];
+  const fetched: string[] = [];
   const audio = new FakeAudio();
   const store = new Map<string, string>(saved === null ? [] : [["laddu-muted", saved]]);
   const player = new VoicePlayer({
@@ -137,7 +137,7 @@ describe("the voice player on the phone", () => {
     expect(fetched).toEqual([]);
     player.unlock();
     expect(await player.play(7)).toBe(true);
-    expect(fetched).toEqual([7]);
+    expect(fetched).toEqual(["7"]);
   });
   test("🔁 Again and 🐢 Slow replay the same audio: fetched once, slow is slower", async () => {
     const { player, fetched, audio } = fakePlayer();
@@ -145,7 +145,7 @@ describe("the voice player on the phone", () => {
     await player.play(7);
     await player.play(7);
     await player.play(7, VOICE_CONFIG.slowRate);
-    expect(fetched).toEqual([7]);
+    expect(fetched).toEqual(["7"]);
     expect(audio.plays.filter((p) => p.src.startsWith("blob:")).map((p) => p.rate)).toEqual([1, 1, 0.75]);
     expect(audio.preservesPitch).toBe(true);
   });
@@ -157,6 +157,14 @@ describe("the voice player on the phone", () => {
     expect(fetched).toEqual([]);
     expect(store.get("laddu-muted")).toBe("1");
     expect(fakePlayer("1").player.muted).toBe(true);
+  });
+  test("a voice started early (by key) also serves 🔁 Again for the saved line: no second fetch", async () => {
+    const { player, fetched } = fakePlayer();
+    player.unlock();
+    await player.play("key-abc");
+    player.alias(42, "key-abc");
+    await player.play(42);
+    expect(fetched).toEqual(["key-abc"]);
   });
   test("mouth shapes follow loudness", () => {
     expect([0, 0.2, 0.6].map(mouthFor)).toEqual(["closed", "open", "wide"]);

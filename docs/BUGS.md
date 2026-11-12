@@ -9,10 +9,10 @@ step, what I expected, what actually happened (exact message), and any clues
 
 | # | Found | Bug | Status |
 |---|---|---|---|
-| 9 | 2026-11-12 | Hold to talk fails on iPhone | 🔴 open |
-| 8 | 2026-11-12 | A spoken turn takes ~15 s (target 3 s) | 🔴 open |
-| 7 | 2026-11-12 | Laddu's voice switched to an English accent on his second line | 🔴 open |
-| 6 | 2026-11-12 | Scene background (sky, grass) missing in the real chat | 🔴 open |
+| 9 | 2026-11-12 | Hold to talk fails on iPhone | 🟡 fix ready, check on iPhone |
+| 8 | 2026-11-12 | A spoken turn takes ~15 s (target 3 s) | 🟡 fix ready, measure on phone |
+| 7 | 2026-11-12 | Laddu's voice switched to an English accent on his second line | 🟡 fix ready, listen on phone |
+| 6 | 2026-11-12 | Scene background (sky, grass) missing in the real chat | ✅ fixed |
 | 5 | 2026-11-12 | CI failing: test expected log rows in a fixed order | ✅ fixed |
 | 4 | 2026-11-11 | Scorer changed my meaning words ("yesterday" → "today") | ✅ fixed |
 | 3 | 2026-11-11 | Scorer gave the same sentence different scores; marked spelling as mistakes | ✅ fixed |
@@ -30,15 +30,32 @@ step, what I expected, what actually happened (exact message), and any clues
   request from the phone**, so the recording fails on the phone before it's sent.
   Suspects: Safari's press-and-hold text-selection menu cutting the press short,
   the recording format, the mic start-up delay.
+- **Why (found 2026-11-12):** the phone turned the recording away itself, as
+  "silent". Two iPhone things: (1) the app had set Safari's audio to
+  "playback" (so Laddu can be heard with the silent switch on), which can
+  switch the microphone off; (2) while recording, iPhone can pause the audio
+  engine the app used to measure loudness, so it measured nothing and decided
+  I was silent.
+- **Fix:** the audio switches to "play-and-record" while 🎤 is held, then back;
+  a meter that hears nothing at all no longer counts as silence (the recording
+  is sent and ElevenLabs decides); recording in one piece (no time slices);
+  Safari's selection menu blocked on the whole mic area. A small grey code now
+  shows under "couldn't hear that" (`quiet`, `short`, `mic-error:…`, `failed`,
+  `silent`) so the next report says which step failed.
 
 ### 8. A spoken turn takes ~15 s
 - **Happened:** `POST /talk` 13.4 s, then `GET /api/speech` 1.4 s. A typed turn
   (`/send`) took 11.6 s.
 - **Why (likely):** every step runs one after another (hear → Tanglish rewrite →
   score → reply → voice), and Laddu waits for all of it.
-- **Fix planned:** reply first, voice on the first sentence, score and bubble
-  text in the background (spec 003, "After the first phone test"). Use the
-  `api_calls` log to see which steps are slow.
+- **Note:** the terminal's time for `/talk` and `/send` includes the score,
+  which arrives last, so it's longer than the wait for Laddu.
+- **Fix (2026-11-12):** Laddu writes his hidden Tamil-script line first (tutor
+  prompt v4); the server starts his voice the moment that line is done and
+  sends the phone a key, so he starts talking while his caption is still being
+  written. For spoken turns he starts on what was heard straight away; my
+  bubble text and score are made in the background and never hold him up. To
+  check: the `api_calls` query in PLAN.md.
 
 ### 7. Laddu's accent changed
 - **Happened:** Charlie's first line sounded great; the second had a strong
@@ -50,6 +67,10 @@ step, what I expected, what actually happened (exact message), and any clues
 
 ### 6. Scene background missing
 - The approved draft had sky, grass and sun; the real chat didn't.
+- **Why:** I built the full-body layout from the spec's wording instead of
+  copying the approved draft (version 4).
+- **Fixed:** the scene now matches the draft: cartoon background, bigger
+  characters cut off at the waist, bubbles above each head.
 
 ### 5. CI failing on GitHub, passing in the codespace
 - **Why:** two calls finishing at the same time can save their log rows in

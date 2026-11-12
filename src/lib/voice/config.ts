@@ -22,6 +22,8 @@ export const VOICE_CONFIG = {
     voiceId: "IKne3meq5aSn9XLyUdCD",
     voiceName: "Charlie",
     voiceModel: "eleven_multilingual_v2",
+    /** Tell the voice it's reading Tamil, so it never guesses English (bug 7). */
+    voiceLanguage: "ta",
   },
   azure: {
     hearingApiVersion: "2024-11-15",

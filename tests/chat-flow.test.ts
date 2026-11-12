@@ -158,7 +158,8 @@ describe.skipIf(!configured)("chat turn flow (fake model)", () => {
     expect(events).toContainEqual({ t: "reset" });
     expect(events.at(-1)).toMatchObject({ t: "done", text: "Enna solra?" });
 
-    const twice = await collect(replyStream(db, new FakeModel([], ["சரி\nok", "சரி\nok"]), convo.id, "Nisha"));
+    // Tamil letters inside a line that would be shown (a line of only Tamil script is his hidden voice line, which is fine).
+    const twice = await collect(replyStream(db, new FakeModel([], ["Sari சரி\nok", "Sari சரி\nok"]), convo.id, "Nisha"));
     expect(JSON.stringify(twice)).not.toMatch(/[஀-௿]/);
     expect(twice.at(-1)).toEqual({ t: "error", message: ERROR_TEXT });
   });

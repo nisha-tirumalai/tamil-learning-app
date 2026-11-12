@@ -88,7 +88,7 @@ export function MySpeech({ attempts, pending, listening, onChip, onRescore, onFi
   /** Present when the latest line was spoken: tap to fix what Laddu heard. */
   onFix?: () => void;
 }) {
-  if (listening) {
+  if (listening || (attempts && attempts.at(-1)!.text === "")) {   // still being heard
     return <div className="speech my-speech pop listening" aria-label="Listening"><span className="dots">● ● ●</span></div>;
   }
   if (!attempts) return <div className="speech my-speech empty" aria-hidden="true" />;
