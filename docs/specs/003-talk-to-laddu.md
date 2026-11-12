@@ -79,9 +79,8 @@ spec. Hearing and voice can come from different services.
 - [ ] **⌨️ Type instead** is always one tap away; I can switch any time.
 
 **Laddu talking**
-- [ ] Laddu's voice sounds like a **little boy**: young and playful. (Most Tamil
-      voices are adults; the bake-off looks for the youngest-sounding one, and
-      may raise its pitch a little if needed.)
+- [ ] Laddu's voice is **ElevenLabs Charlie** (`eleven_multilingual_v2`),
+      chosen in the bake-off (replaces the earlier "little boy" idea).
 - [ ] Laddu's reply is **spoken** in the chosen Tamil voice, starting within
       **3 s** of my sending (typical, Wi-Fi).
 - [ ] The voice reads a hidden **Tamil-script** version of the reply (made with
@@ -207,21 +206,24 @@ and mute works on the bus.
 
 - **Hearing: ElevenLabs** (Scribe v2): 6% errors vs Azure's 12%; kept 37/37
   English words (Azure 30/33); "fixed" my grammar 3 times (Azure 6); 0.6 s vs 0.8 s.
-- **Laddu's voice: ElevenLabs preferred** ("infinitely better" than Azure to
-  Nisha). Its Tamil library voices (e.g. Velan) need a paid plan to use through
-  the API; the free plan only allows built-in voices like Charlie (an English
-  voice). **Placeholder until decided: Azure `ta-IN-Valluvar:DragonLatestNeural`
-  (no pitch change)**, the best-sounding Azure voice.
-- **Voice matters a little more than hearing.** If ElevenLabs credits run low,
-  switch **hearing** to Azure first and keep ElevenLabs for Laddu's voice.
-- Azure's free tier throttles quick bursts of requests ("429"); the bake-off
-  should pause between Azure calls.
+- **Laddu's voice: ElevenLabs "Charlie" (deep, confident, energetic) with the
+  `eleven_multilingual_v2` model** (decided 2026-11-12). Nisha's favourite of
+  all the clips. Bonus: it's an English-speaking voice, so the English words I
+  mix in (bus, office, phone) sound natural. Available on the free plan.
+  This replaces the earlier "little boy" idea.
+- ElevenLabs' Tamil library voices (e.g. Velan) need a paid plan; not needed now.
+- Best Azure voice, kept as a backup: `ta-IN-Valluvar:DragonLatestNeural` (no pitch change).
+- **Azure is the fallback, not used day to day.** Voice matters a little more
+  than hearing, so if ElevenLabs' free credits (10,000 a month, shared by hearing
+  and voice) run low, switch **hearing** to Azure (free tier) first and keep
+  ElevenLabs for Laddu's voice. If that's still not enough, consider ElevenLabs'
+  paid plan.
 
 ## Decided by Nisha (2026-11-10)
 
 - **Captions:** yes, Laddu's Tanglish words show while he talks (English on tap).
 - **Hold to talk**, so nobody talks for too long and spends too much.
-- **Laddu's voice:** a little boy.
+- **Laddu's voice:** a little boy (changed 2026-11-12 to ElevenLabs Charlie, see above).
 - **Opening line:** spoken out loud too.
 - **No backup plan** written in advance: if the bake-off shows hearing is poor,
   we decide then.
