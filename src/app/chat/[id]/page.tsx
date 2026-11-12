@@ -10,9 +10,6 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
   const conversation = await getConversation(db, id).catch(() => null);
   if (!conversation) notFound();
   return (
-    <>
-      {conversation.title && <p className="situation">🎬 {conversation.title}</p>}
-      <Chat conversationId={id} initial={conversation.thread} opener={conversation.started_by === "laddu"} />
-    </>
+    <Chat conversationId={id} initial={conversation.thread} opener={conversation.started_by === "laddu"} title={conversation.title} />
   );
 }

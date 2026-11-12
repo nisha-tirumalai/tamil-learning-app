@@ -188,3 +188,83 @@ button.bubble.tappable {
 .confirm { gap: 0.5rem; font-size: 0.9rem; }
 .confirm button { margin: 0; padding: 0.3rem 0.7rem; }
 .danger-button { background: var(--danger); color: var(--accent-text); }
+
+/* ─── The conversation scene (spec 003) ──────────────────────────────────── */
+/* Sized so the whole scene + the mic fit on a phone held upright. */
+.scene-chat { min-height: auto; gap: 0.3rem; }
+.scene-top { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; min-height: 1.6rem; }
+.scene-top .situation { margin: 0; font-size: 0.95rem; }
+.earlier-button { margin: 0; white-space: nowrap; }
+.stage { display: flex; flex-direction: column; gap: 0.2rem; }
+.bubble-row { display: flex; }
+.laddu-row { flex-direction: column; align-items: flex-start; }
+.my-row { justify-content: flex-end; }
+
+/* Comic speech bubbles: only the latest line each; the tail points at the speaker. */
+.speech {
+  position: relative; max-width: 80%; min-width: 4.5rem; margin: 0 0 0.65rem;
+  padding: 0.45rem 0.8rem; border-radius: 1.1rem; border: 2px solid #2b1d16;
+  background: var(--laddu); color: var(--text); text-align: left; font-weight: 400; overflow-wrap: anywhere;
+}
+.speech.empty { visibility: hidden; min-height: 2.4rem; }
+.speech::after {
+  content: ""; position: absolute; bottom: -0.62rem; width: 0.95rem; height: 0.95rem;
+  background: inherit; border: inherit; border-top: none; border-left: none;
+}
+.laddu-speech::after { left: 2.2rem; transform: rotate(45deg) skew(12deg, 12deg); }
+.my-speech { background: var(--mine); }
+.my-speech::after { right: 2.2rem; transform: rotate(45deg) skew(12deg, 12deg); }
+/* Long lines scroll inside the bubble; text is never cut off. */
+.speech-scroll { display: block; max-height: 6.2rem; overflow-y: auto; }
+.speech .tanglish { display: block; font-size: 1.08rem; font-weight: 600; }
+.speech .english { display: block; margin-top: 0.2rem; color: var(--muted); }
+.speech .mine-text { font-size: 1.05rem; }
+button.speech { margin: 0 0 0.65rem; font: inherit; cursor: pointer; }
+button.speech.tappable { padding: 0.45rem 0.8rem; }
+.speech.typing .tanglish { color: var(--muted); }
+.fix-tap { background: none; color: inherit; margin: 0; padding: 0; font: inherit; font-weight: 400; text-align: left; width: 100%; }
+.fix-hint { margin-left: 0.3rem; font-size: 0.8rem; opacity: 0.7; white-space: nowrap; }
+.chip.corner { position: absolute; right: -0.4rem; top: -0.9rem; border: 2px solid #2b1d16; margin: 0; }
+.listening .dots { letter-spacing: 0.2rem; color: var(--muted); animation: pulse 1s infinite; }
+.pop { animation: pop 0.2s ease-out; }
+@keyframes pop { from { transform: scale(0.9); } to { transform: scale(1); } }
+@keyframes pulse { 50% { opacity: 0.35; } }
+
+.people { display: flex; justify-content: space-between; align-items: flex-end; gap: 0.25rem; }
+.who svg { display: block; width: 100%; height: auto; max-height: 30dvh; }
+.laddu-who { width: 48%; max-width: 220px; }
+.me-who { width: 40%; max-width: 190px; }
+
+.voice-controls { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0 0 0.3rem; }
+.voice-controls button { margin: 0; }
+.round { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 999px; padding: 0.2rem 0.75rem; font-size: 0.9rem; }
+.round[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.hear-button { padding: 0.3rem 0.9rem; font-size: 0.95rem; animation: pulse 1.4s infinite; }
+
+.talk-bar, .type-bar { position: sticky; bottom: 0; background: var(--bg); padding: 0.4rem 0 0.25rem; display: flex; flex-direction: column; align-items: center; }
+.type-bar { align-items: stretch; }
+.type-bar .composer { position: static; border-top: none; padding: 0; }
+.mic {
+  width: min(100%, 22rem); margin: 0; padding: 0.95rem 1rem; font-size: 1.15rem; border-radius: 999px;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.mic.on { background: var(--spoken); transform: scale(1.04); }
+.switch-mode { margin: 0.25rem auto 0; }
+.mic-help { margin: 0 0 0.5rem; }
+
+.panel-backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 0.35); display: flex; align-items: flex-end; justify-content: center; z-index: 10; }
+.panel {
+  position: relative; width: min(100%, 40rem); max-height: 85dvh; overflow-y: auto;
+  background: var(--bg); border-radius: 1rem 1rem 0 0; padding: 1rem 1rem 1.5rem;
+}
+.panel h2 { margin-top: 0.2rem; }
+.panel .correction { margin: 0.4rem 0 0; width: 100%; }
+.panel-close { position: absolute; top: 0.5rem; right: 0.75rem; margin: 0; font-size: 1.2rem; }
+@media (prefers-color-scheme: dark) { .speech, .chip.corner { border-color: #c9b8a6; } }
+@media (max-width: 30rem) { main:has(.scene-chat) { padding-top: 0.5rem; padding-bottom: 0.5rem; } }
+/* Phones: the top menu stays on one line (swipe it sideways), leaving room for the scene. */
+@media (max-width: 30rem) {
+  .top { padding: 0.4rem 0.75rem; gap: 0.5rem; }
+  .top nav { flex-wrap: nowrap; overflow-x: auto; gap: 0.8rem; font-size: 0.9rem; white-space: nowrap; scrollbar-width: none; }
+  .top .link-button { margin: 0; font-size: 0.85rem; white-space: nowrap; }
+}

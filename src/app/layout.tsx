@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { AudioUnlock } from "@/components/AudioUnlock";
 import { AvatarProvider } from "@/components/AvatarContext";
 import { isAvatar } from "@/lib/avatar";
 import { createClient } from "@/lib/supabase/server";
@@ -38,6 +39,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </form>
           </header>
         )}
+        {user && <AudioUnlock />}
         <main><AvatarProvider avatar={avatar}>{children}</AvatarProvider></main>
       </body>
     </html>

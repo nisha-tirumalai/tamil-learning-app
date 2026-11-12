@@ -7,6 +7,7 @@ import { chipFor } from "@/lib/chat/chip";
 import { toScore } from "@/lib/chat/scorer";
 import type { Attempt } from "@/lib/chat/turn";
 import { LadduBubble, MyTurn } from "@/components/Turns";
+import { LadduSpeech, MySpeech, Stage } from "@/components/Scene";
 import { goodAnswer } from "./fixtures";
 
 const none = new Set<number>();
@@ -72,5 +73,31 @@ describe("the chip under my message", () => {
   test("after a try again: both scores", () => {
     expect(chipFor([attempt(1), attempt(2, { grammar: 6, spoken: 3, total: 9 })], none).label).toBe("⭐ 7 → 9");
     expect(chipFor([attempt(1), attempt(2)], new Set([2])).label).toBe("⭐ 7 → …");
+  });
+});
+
+describe("the conversation scene (spec 003)", () => {
+  test("Laddu's bubble: Tanglish only until tapped; a line that isn't saved has nothing to tap", () => {
+    const line = html(<LadduSpeech line={{ kind: "line", text: "Evlo venum?", english: "How much do you need?" }} />);
+    expect(line).toContain("Evlo venum?");
+    expect(line).not.toContain("How much");
+    expect(line).toContain('aria-expanded="false"');
+    expect(html(<LadduSpeech line={{ kind: "say", text: "Aiyo" }} />)).not.toContain("<button");
+  });
+  test("my bubble: the ⭐ chip on its corner; spoken lines can be fixed, typed ones can't", () => {
+    const spoken = html(<MySpeech attempts={[{ ...attempt(1), spoken: true }]} pending={none} listening={false} onChip={() => {}} onRescore={() => {}} onFix={() => {}} />);
+    expect(spoken).toContain("chip corner");
+    expect(spoken).toContain("⭐ 7");
+    expect(spoken).toContain("tap to fix what Laddu heard");
+    const typed = html(<MySpeech attempts={[attempt(1)]} pending={none} listening={false} onChip={() => {}} onRescore={() => {}} />);
+    expect(typed).not.toContain("tap to fix");
+  });
+  test("while I'm talking, my bubble shows that Laddu is listening", () => {
+    expect(html(<MySpeech attempts={null} pending={none} listening onChip={() => {}} onRescore={() => {}} />)).toContain('aria-label="Listening"');
+  });
+  test("both of us stand side by side, full body, facing each other; Laddu's mouth can open", () => {
+    const out = html(<Stage ladduMouth="wide" ladduEyes="open" myMouth="closed" myEyes="blink" ladduBubble={null} myBubble={null} />);
+    expect(out.indexOf("Laddu the teddy bear")).toBeLessThan(out.indexOf('aria-label="You"'));   // Laddu on the left
+    expect(out).toContain("#7a2c22");   // an open mouth
   });
 });
