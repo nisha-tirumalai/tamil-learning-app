@@ -17,8 +17,13 @@ decisions. Update it at the end of every phase.
 4. **Secrets only in GitHub Codespaces secrets**, never in files. The repo is public.
    `.env*` stays gitignored anyway, as a safety net.
 
-## Where we are (2026-11-11)
+## Where we are (2026-11-12)
 
+- **2026-11-12: Spec 003 (voice) built, waiting for Nisha's on-phone check.** All 126 tests pass (`npm run test:db`); live check of ElevenLabs (hearing + Charlie) and Azure hearing with iPhone (m4a) and Chrome (webm) audio: all worked. Needs Nisha:
+  1. **Paste `supabase/migrations/20261113000000_voice.sql` into the Supabase SQL Editor and Run** (and `20261112000000_avatar.sql` first, if not done yet).
+  2. Restart `npm run dev`, make port 3000 visible to her phone, then the spec's manual test: 10 spoken messages in a Laddu-starts situation.
+  - What's built: see "Phase 5 (spec 003): what's built" below.
+  - Not done yet: the call-log dashboard (phase 7, by decision). Timing to watch: a spoken turn is hearing (~0.7 s) + Tanglish rewrite (~1 s) + reply + voice (~0.5 s); if it feels slower than 3 s, check `api_calls` and consider skipping the rewrite.
 - **2026-11-11: Spec 003 (voice) started.**
   - **Choose your avatar: built.** `profiles.avatar` (null = not chosen; migration `20261112000000_avatar.sql`, **Nisha: paste it into the Supabase SQL Editor and Run**). The home screen sends you to `/choose-avatar` until you pick; `/settings` changes it. `<Me />` draws your avatar via `AvatarContext` (set in the root layout). Uses the old simple drawings until the new ones are approved.
   - **New drawings: drafts waiting for Nisha's approval** (`src/components/characters/`, not committed yet, not used by the app). Laddu, girl and guy drawn in code with swappable mouth (closed/open/wide) and eyes (open/blink/happy/up), full-body or head crop. Shown to Nisha on a private review page.
@@ -62,7 +67,7 @@ decisions. Update it at the end of every phase.
 | 2 | Login + private per-user data | ✅ 2026-11-07 | (before specs) |
 | 3 | **Chat v1 with Laddu:** welcome → I start / Laddu starts → correction + score /10 + try again + continue | 🟨 built 2026-11-11, needs key + phone check | [001](specs/001-chat-v1.md) |
 | 3b | **Laddu v1.1:** fewer words, instant reply with tap-to-open score, stays in the scene, stretch questions | 🟨 built 2026-11-11, needs phone check + smoke eval | [002](specs/002-laddu-v1-1.md) |
-| 5 | **Talk to Laddu (voice), moved up:** speak in, Tamil voice out, mute, call-style screen with Laddu talking | 🟨 spec approved 2026-11-11 | [003](specs/003-talk-to-laddu.md) |
+| 5 | **Talk to Laddu (voice), moved up:** speak in, Tamil voice out, mute, call-style screen with Laddu talking | 🟨 built 2026-11-12, needs migration + phone check | [003](specs/003-talk-to-laddu.md) |
 | (8 →) | **Go live on Vercel (moved up):** always-on address, home-screen install, keys in Vercel settings, Supabase URL config | ⬜ | setup walkthrough, no spec |
 | 4 | **Rubric + gold set + evals:** 20→40 scored messages, eval script, compare 2–3 models, one model per job | ⬜ | |
 | 6 | **Memory + progress:** weak-spots list steers conversations; weekly progress screen | ⬜ | |
@@ -138,10 +143,20 @@ The MVP is single-user.
 - `FakeModel.scoreDelayMs` makes scoring slow in tests. Screen tests (`tests/screen.test.tsx`)
   render to HTML with `react-dom/server`, no browser library needed.
 
+## Phase 5 (spec 003): what's built
+- **Settings:** `src/lib/voice/config.ts`. `hearing: "elevenlabs"` (Scribe v2), `hearingFallback: "azure"` (tried once if ElevenLabs fails, e.g. out of credits), `voice: "elevenlabs"` (Charlie `IKne3meq5aSn9XLyUdCD`, `eleven_multilingual_v2`). Switching either is one word. Azure voice backup: `ta-IN-Valluvar:DragonLatestNeural`. Rough prices for the log are there too.
+- **Migration `20261113000000_voice.sql`:** `messages.tamil` (Laddu's hidden Tamil-script line, voice only; `MESSAGE_COLUMNS` must never include it), `messages.heard` (what hearing wrote, in Tanglish, kept after a fix), `messages.spoken`. `api_calls`: one row per Claude/ElevenLabs/Azure call (service, job, model/voice, ms_first, ms_total, tokens/characters/audio seconds, cost estimate, error; never text or audio). Insert own rows only; only admins (`profiles.is_admin`) can read; no update/delete.
+- **Logging:** `src/lib/calls.ts` (`dbLog(db)` writes in the background; routes `flush()` at the end). `anthropicModel(log)` logs score / reply / opener / tanglish with usage and cost; `hear()` and `speak()` in `src/lib/voice/services.ts` log hearing/voice.
+- **Spoken turn:** `POST /api/chat/[id]/talk` (multipart: audio, ms, peak) → `talkTurn()` in `turn.ts`: `checkRecording()` (too short <0.6 s, silent, >30 s, too big: rejected before any paid call, not counted) → cap → `hear()` → `toTanglish()` (Claude, `prompts/hearing_to_tanglish_v1.md`, word for word, mistakes kept; falls back to plain letter conversion so Tamil script never reaches the screen) → `heard` event → same reply + score stream as typing. The recording's length and loudness come from the phone (fine for one user). Audio is never stored.
+- **Fix what Laddu heard:** `fixHeard()` / action `fixWhatISaid`: new text scored (counts like a try again); only for spoken messages. Laddu doesn't re-reply.
+- **Laddu's voice:** tutor prompt **v3** adds a third line in Tamil script. `visiblePart()` streams only the first two lines; the Tamil guard checks only those. Laddu sees his own earlier Tamil lines (so he keeps writing them). `GET /api/speech/[messageId]` → MP3 of `tamil` (or the Tanglish if missing).
+- **Phone side:** `src/lib/voice/player.ts` (one shared player: unlocked by the first tap anywhere via `AudioUnlock` in the layout; audio cached per line, so Slow (0.75×, same pitch) and Again cost nothing; Mute in localStorage and fetches nothing; loudness from a Web Audio analyser drives `mouthFor()`; sets iOS `audioSession` to "playback" so the silent switch doesn't mute him). `useHoldToTalk` (MediaRecorder; webm or mp4; mic released after each recording; blocked-mic help).
+- **Scene:** `src/components/Scene.tsx` + `Chat.tsx` (`LiveChat`). Read-only past chats and 📜 Earlier use `ChatList`. Checked at iPhone size in light and dark (headless screenshots).
+
 ## Architecture
 
 ```
-Phone (PWA) ──► Next.js server routes ──► Claude API / Azure Speech
+Phone (PWA) ──► Next.js server routes ──► Claude API / ElevenLabs (Azure backup)
      │                │  checks login + daily cap first
      └──► Supabase (auth, Postgres + RLS, audio storage)
 ```
