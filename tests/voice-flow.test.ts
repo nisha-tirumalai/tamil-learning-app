@@ -146,11 +146,13 @@ describe.skipIf(!configured)("talking to Laddu (fake services)", () => {
     log.add({ service: "elevenlabs", job: "voice", model: "Charlie · eleven_multilingual_v2", ms_total: 512.4, characters: 30, cost_usd: 0.0066, ok: true });
     log.add({ service: "claude", job: "reply", model: "claude-haiku-5-5", ms_first: 300, ms_total: 900, input_tokens: 1200, output_tokens: 40, cost_usd: 0.00014, ok: true });
     await log.flush();
-    const { data: rows } = await admin.from("api_calls").select("service, job, ms_total, user_id").eq("user_id", userId).order("id");
-    expect(rows).toEqual([
+    // Rows are written in the background, at the same time, so they can land in either order.
+    const { data: rows } = await admin.from("api_calls").select("service, job, ms_total, user_id").eq("user_id", userId);
+    expect(rows).toHaveLength(2);
+    expect(rows).toEqual(expect.arrayContaining([
       { service: "elevenlabs", job: "voice", ms_total: 512, user_id: userId },
       { service: "claude", job: "reply", ms_total: 900, user_id: userId },
-    ]);
+    ]));
     expect((await db.from("api_calls").select("id")).data).toEqual([]);           // not readable by a normal user
     expect((await db.from("api_calls").update({ ok: false }).eq("user_id", userId).select()).data ?? []).toEqual([]);
     // Someone else's rows can't be added.
