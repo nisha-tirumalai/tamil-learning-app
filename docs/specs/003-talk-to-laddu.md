@@ -118,6 +118,12 @@ spec. Hearing and voice can come from different services.
 - [ ] Laddu is **big, full body**. While his voice plays, his
       **mouth moves** (a simple open/close animation that follows the loudness
       of his voice). When he's quiet, he idles (blinks).
+- [ ] **Welcome from Laddu** (added 2026-11-12): before choosing an avatar, a
+      screen where Laddu introduces himself, e.g. *"Vanakkam! Naan Laddu.
+      Tamil-la pesalaam!"* (Hi, I'm Laddu, let's talk in Tamil!), English on ⓘ,
+      then "Choose your avatar".
+- [ ] **The scene has its background** (sky, grass, sun, as in the approved
+      draft), not a plain colour.
 - [ ] **Choose your character** (added 2026-11-11): the first time I sign in,
       I pick **girl** or **guy** (two pictures, tap one). It's saved in my profile
       and can be changed in settings. That character stands next to Laddu in
