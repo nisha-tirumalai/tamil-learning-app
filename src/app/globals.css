@@ -195,10 +195,43 @@ button.bubble.tappable {
 .scene-top { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; min-height: 1.6rem; }
 .scene-top .situation { margin: 0; font-size: 0.95rem; }
 .earlier-button { margin: 0; white-space: nowrap; }
-.stage { display: flex; flex-direction: column; gap: 0.2rem; }
-.bubble-row { display: flex; }
-.laddu-row { flex-direction: column; align-items: flex-start; }
-.my-row { justify-content: flex-end; }
+/* The scene keeps the drafts' shape (350 × 470) and scales as one picture, so
+   nothing moves around between phones: it's as wide as the screen allows,
+   but never so tall that the mic is pushed off a phone screen. */
+.stage { display: flex; justify-content: center; }
+.scene {
+  position: relative; overflow: hidden; width: min(100%, calc(64dvh * 350 / 470)); aspect-ratio: 350 / 470;
+  border: 2.5px solid #2b1d16; border-radius: 1.1rem; background: #9ed8f5; container-type: inline-size;
+}
+.backdrop { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Big and close together, cut off around the waist by the bottom of the scene. */
+.actor { position: absolute; bottom: -13.2%; }
+.actor svg { display: block; width: 100%; height: auto; }
+.laddu-actor { left: -9.7%; width: 67.4%; }
+.me-actor { right: -8.6%; width: 58.9%; }
+/* Bubbles are pinned by their bottom edge, just above each head, and grow upwards. */
+.bubble-wrap { position: absolute; z-index: 3; display: flex; flex-direction: column; }
+.laddu-wrap { left: 2.9%; bottom: 53.6%; width: 47%; align-items: flex-start; }
+.my-wrap { right: 2.9%; bottom: 54.5%; width: 45%; align-items: flex-end; }
+.scene .speech { max-width: 100%; width: 100%; font-size: clamp(0.76rem, 4cqi, 0.95rem); padding: 0.45em 0.7em; background: #fff; color: #2b1d16; border-color: #2b1d16; }
+.scene .speech .tanglish { font-size: 1.05em; }
+.scene .speech .english { color: #7a6656; }
+.scene .speech.typing .tanglish { color: #7a6656; }
+.scene .my-speech { background: #ffe9c7; }
+.scene .speech-scroll { max-height: 9em; }
+.scene .speech .mine-text { font-size: 1.05em; }
+.scene .speech.has-info { padding-right: 1.9em; }
+.scene .info-button { width: 1.45em; height: 1.45em; font-size: 1em; top: 0.3em; right: 0.3em; }
+.scene .laddu-speech::after { left: 40%; }
+.scene .my-speech::after { right: 38%; }
+.scene .chip.corner { top: auto; bottom: -1.1rem; right: -0.4rem; background: #fff; color: #2b1d16; border-color: #2b1d16; }
+.scene .info-button { background: #fff; }
+.scene .english-card {
+  position: absolute; left: 4%; right: 4%; bottom: 4%; max-width: none; margin: 0; z-index: 4;
+  background: #fff; color: #2b1d16; border: 2.5px solid #2b1d16; box-shadow: 0 4px 14px rgb(0 0 0 / 0.18);
+}
+.scene .english-card-label { color: #7a6656; }
+.notice-detail { margin: 0; text-align: center; font-size: 0.75rem; color: var(--muted); }
 
 /* Comic speech bubbles: only the latest line each; the tail points at the speaker. */
 .speech {
@@ -215,7 +248,7 @@ button.bubble.tappable {
 .my-speech { background: var(--mine); }
 .my-speech::after { right: 2.2rem; transform: rotate(45deg) skew(12deg, 12deg); }
 /* Long lines scroll inside the bubble; text is never cut off. */
-.speech-scroll { display: block; max-height: 6.2rem; overflow-y: auto; }
+.speech-scroll { display: block; max-height: 6.2rem; overflow-y: auto; position: relative; z-index: 1; }   /* above the tail */
 .speech .tanglish { display: block; font-size: 1.08rem; font-weight: 600; }
 .speech .english { display: block; margin-top: 0.2rem; color: var(--muted); }
 .speech .mine-text { font-size: 1.05rem; }
@@ -230,12 +263,8 @@ button.speech.tappable { padding: 0.45rem 0.8rem; }
 @keyframes pop { from { transform: scale(0.9); } to { transform: scale(1); } }
 @keyframes pulse { 50% { opacity: 0.35; } }
 
-.people { display: flex; justify-content: space-between; align-items: flex-end; gap: 0.25rem; }
-.who svg { display: block; width: 100%; height: auto; max-height: 30dvh; }
-.laddu-who { width: 48%; max-width: 220px; }
-.me-who { width: 40%; max-width: 190px; }
 
-.voice-controls { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0 0 0.3rem; }
+.voice-controls { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: center; margin: 0.35rem 0 0; }
 .voice-controls button { margin: 0; }
 .round { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 999px; padding: 0.2rem 0.75rem; font-size: 0.9rem; }
 .round[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
@@ -260,7 +289,8 @@ button.speech.tappable { padding: 0.45rem 0.8rem; }
 .panel h2 { margin-top: 0.2rem; }
 .panel .correction { margin: 0.4rem 0 0; width: 100%; }
 .panel-close { position: absolute; top: 0.5rem; right: 0.75rem; margin: 0; font-size: 1.2rem; }
-@media (prefers-color-scheme: dark) { .speech, .chip.corner { border-color: #c9b8a6; } }
+/* The scene is a bright picture in dark mode too; only bubbles outside it change. */
+@media (prefers-color-scheme: dark) { .speech, .chip.corner { border-color: #c9b8a6; } .scene .speech, .scene .chip.corner { border-color: #2b1d16; } }
 @media (max-width: 30rem) { main:has(.scene-chat) { padding-top: 0.5rem; padding-bottom: 0.5rem; } }
 /* Phones: the top menu stays on one line (swipe it sideways), leaving room for the scene. */
 @media (max-width: 30rem) {

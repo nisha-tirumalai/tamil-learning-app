@@ -6,6 +6,7 @@
 import { dbLog } from "@/lib/calls";
 import { voiceText } from "@/lib/chat/turn";
 import { createClient } from "@/lib/supabase/server";
+import { takeVoice } from "@/lib/voice/prepared";
 import { configuredVoice, speak } from "@/lib/voice/services";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ messageId: string }> }) {
@@ -13,11 +14,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ mes
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) return new Response("Not signed in", { status: 401 });
-  const text = await voiceText(db, Number(messageId));
+  const id = Number(messageId);
+  const text = await voiceText(db, id);   // also checks the line is yours
   if (!text) return new Response("Not found", { status: 404 });
   const log = dbLog(db);
   try {
-    const audio = await speak(configuredVoice(), text, log);
+    // Usually already made (started when his reply finished); otherwise make it now.
+    const early = takeVoice(id);
+    const audio = (early && await early.catch(() => null)) || await speak(configuredVoice(), text, log);
     return new Response(audio, { headers: { "Content-Type": "audio/mpeg", "Cache-Control": "private, max-age=86400" } });
   } catch {
     return new Response("Voice failed", { status: 502 });

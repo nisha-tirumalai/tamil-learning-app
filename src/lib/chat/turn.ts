@@ -291,7 +291,7 @@ export function visiblePart(raw: string): string {
  * attempt), not the scorer's guess (spec 002), so a wrong "I understood"
  * can't send the chat off track. If I told the app what I meant, he gets that.
  */
-export function tutorTurns(rows: MessageRow[]): Turn[] {
+export function tutorTurns(rows: MessageRow[], heardTurn?: string): Turn[] {
   const turns: Turn[] = [];
   for (const item of buildThread(rows)) {
     let turn: Turn;
@@ -308,9 +308,18 @@ export function tutorTurns(rows: MessageRow[]): Turn[] {
     if (prev?.role === turn.role) prev.content += `\n${turn.content}`;
     else turns.push(turn);
   }
+  if (heardTurn) {
+    const content = `${heardTurn}\n(${HEARD_NOTE})`;
+    const prev = turns.at(-1);
+    if (prev?.role === "user") prev.content += `\n${content}`;
+    else turns.push({ role: "user", content });
+  }
   if (turns[0]?.role !== "user") turns.unshift({ role: "user", content: "(Start the conversation.)" });
   return turns;
 }
+
+/** Added to what I said out loud, which may be in Tamil script (speech-to-text writes it that way). */
+export const HEARD_NOTE = "Said out loud; this is what speech-to-text heard. Reply in Tanglish as always.";
 
 /** Who Laddu is in this chat. He stays in that role the whole time (spec 002). */
 export function sceneText(situationKey: string | null, name: string, opening: boolean): string {
@@ -332,15 +341,21 @@ export function sceneText(situationKey: string | null, name: string, opening: bo
  */
 export async function* replyStream(
   db: Db, model: ChatModel, conversationId: string, displayName: string | null,
+  opts: {
+    /** Spec 003: what I just said out loud, as heard (not saved yet), so Laddu can start straight away. */
+    heardTurn?: string;
+    /** Laddu's line is saved only after this (so it lands after my message). */
+    beforeSave?: Promise<unknown>;
+  } = {},
 ): AsyncGenerator<ReplyEvent> {
   const conversation = await loadConversation(db, conversationId);
   const rows = await loadMessages(db, conversationId);
-  const opening = rows.length === 0;
+  const opening = rows.length === 0 && !opts.heardTurn;
   if (opening && !(await useOneMessage(db))) { yield { t: "cap" }; return; }
 
   const name = firstName(displayName);
   const system = loadPrompt(CHAT_CONFIG.prompts.tutor, { name, scene: sceneText(conversation.situation, name, opening) });
-  const messages = tutorTurns(rows);
+  const messages = tutorTurns(rows, opts.heardTurn);
 
   for (let attempt = 0; attempt < 2; attempt++) {
     let full = "";
@@ -368,6 +383,8 @@ export async function* replyStream(
     }
     const { text, english, tamil: forVoice } = splitReply(full);
     if (!text) { yield { t: "error", message: ERROR_TEXT }; return; }
+    if (!forVoice && !hasTamilScript(text)) console.warn("Laddu's reply had no Tamil-script line: his voice will read the Tanglish (English-sounding accent).");
+    try { await opts.beforeSave; } catch { yield { t: "error", message: ERROR_TEXT }; return; }
     const { data, error } = await db.from("messages")
       .insert({ conversation_id: conversationId, role: "laddu", text, english: english || null, tamil: forVoice })
       .select("id").single();
@@ -460,24 +477,53 @@ export async function* talkTurn(
   if (problem) { yield { t: "hearing_error", problem, message: PROBLEM_TEXT[problem] }; return; }
   if (!(await useOneMessage(db))) { yield { t: "cap" }; return; }
 
-  let text: string;
+  let raw: string;
   try {
-    const heard = await hear(hearing, recording, log);
-    text = (await toTanglish(model, heard.text)).slice(0, 2000);
+    raw = (await hear(hearing, recording, log)).text.trim();
   } catch {
     yield { t: "hearing_error", problem: "failed", message: HEARING_ERROR_TEXT };
     return;
   }
-  if (!text) { yield { t: "hearing_error", problem: "silent", message: HEARING_ERROR_TEXT }; return; }
+  if (!raw) { yield { t: "hearing_error", problem: "silent", message: HEARING_ERROR_TEXT }; return; }
+
+  // To save time, Laddu starts replying to what was heard right away, while the
+  // Tanglish version for my bubble is made. His events wait in the queue until
+  // my bubble is out, and his line is saved only after mine.
+  let mineSaved!: (ok: boolean) => void;
+  const saved = new Promise<void>((resolve, reject) => { mineSaved = (ok) => (ok ? resolve() : reject(new Error("not saved"))); });
+  saved.catch(() => {});
+  const queue: TurnEvent[] = [];
+  let wake: (() => void) | null = null;
+  let running = 1;
+  const push = (e: TurnEvent) => { queue.push(e); wake?.(); wake = null; };
+  const finished = () => { running--; wake?.(); wake = null; };
+  void (async () => {
+    for await (const e of replyStream(db, model, input.conversationId, input.displayName, { heardTurn: raw, beforeSave: saved })) push(e);
+  })().catch((e) => { console.warn("reply failed:", (e as Error).message); push({ t: "error", message: ERROR_TEXT }); }).finally(finished);
+
+  const text = (await toTanglish(model, raw)).slice(0, 2000);
+  if (!text) { mineSaved(false); yield { t: "hearing_error", problem: "silent", message: HEARING_ERROR_TEXT }; return; }
   yield { t: "heard", text };
 
   const { data, error } = await db.from("messages")
     .insert({ conversation_id: input.conversationId, role: "me", text, heard: text, spoken: true })
     .select("id").single();
-  if (error || !data) { yield { t: "error", message: ERROR_TEXT }; return; }
+  if (error || !data) { mineSaved(false); yield { t: "error", message: ERROR_TEXT }; return; }
   const messageId = data.id as number;
   yield { t: "saved", messageId };
-  yield* replyAndScore(db, model, input.conversationId, messageId, input.displayName);
+  mineSaved(true);
+
+  running++;
+  scoreMessage(db, model, messageId).then(
+    (r) => push(r.ok ? { t: "score", messageId, score: r.score } : { t: "score_error", messageId }),
+    (e) => { console.warn("score failed:", (e as Error).message); push({ t: "score_error", messageId }); },
+  ).finally(finished);
+
+  for (;;) {
+    while (queue.length) yield queue.shift()!;
+    if (running === 0) return;
+    await new Promise<void>((resolve) => { wake = resolve; });
+  }
 }
 
 /**

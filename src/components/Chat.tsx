@@ -16,7 +16,7 @@ import type { Attempt, CardResult, ThreadItem, TurnEvent } from "@/lib/chat/turn
 import { HEARING_ERROR_TEXT, VOICE_CONFIG } from "@/lib/voice/config";
 import { mouthFor, voicePlayer, type VoicePlayer } from "@/lib/voice/player";
 import { type CardActions, CorrectionCard } from "./CorrectionCard";
-import { type LadduLine, LadduSpeech, MySpeech, Stage, useBlink } from "./Scene";
+import { EnglishCard, type LadduLine, LadduSpeech, MySpeech, Stage, useBlink } from "./Scene";
 import { LadduBubble, MyTurn } from "./Turns";
 import { useHoldToTalk } from "./useHoldToTalk";
 
@@ -24,7 +24,7 @@ type Status =
   | { kind: "idle" }
   | { kind: "replying"; raw: string }
   | { kind: "hearing" }                     // my recording is on its way / being heard
-  | { kind: "notice"; message: string }     // Laddu says something that isn't saved (couldn't hear…)
+  | { kind: "notice"; message: string; detail?: string }   // Laddu says something that isn't saved (couldn't hear…); detail = a small code to help find problems
   | { kind: "error"; message: string; retry: () => void }
   | { kind: "nudge" }                       // Laddu hasn't answered my last message yet
   | { kind: "cap" };
@@ -96,6 +96,8 @@ function LiveChat({ conversationId, initial, opener, title }: {
     await p.play(id, rate);
   }, []);
   const muted = player.current?.muted ?? false;
+  /** Tells the server to start Laddu's voice early. Muted: no voice call at all. */
+  const wantVoice = () => !(player.current?.muted ?? false);
   const speaking = player.current?.playing != null;
 
   // ─── Small state helpers ───────────────────────────────────────────────
@@ -145,7 +147,7 @@ function LiveChat({ conversationId, initial, opener, title }: {
             markPending(tempId, true);
             setStatus({ kind: "replying", raw: "" });
             break;
-          case "hearing_error": over = true; setStatus({ kind: "notice", message: e.message }); break;
+          case "hearing_error": over = true; setStatus({ kind: "notice", message: e.message, detail: e.problem }); break;
           case "saved": {
             const id = e.messageId;
             saved = id;
@@ -170,7 +172,7 @@ function LiveChat({ conversationId, initial, opener, title }: {
     markPending(tempId, false);
     if (saved !== null) markPending(saved, false);
     if (!over) {
-      if (spoken && saved === null) setStatus({ kind: "notice", message: HEARING_ERROR_TEXT });
+      if (spoken && saved === null) setStatus({ kind: "notice", message: HEARING_ERROR_TEXT, detail: "no-answer" });
       else failReply();
     }
   }
@@ -178,7 +180,7 @@ function LiveChat({ conversationId, initial, opener, title }: {
   function sendTyped(message: string) {
     const clean = message.trim();
     const go = () => void runTurn(() => fetch(`/api/chat/${conversationId}/send`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: clean }),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: clean, voice: wantVoice() }),
     }), clean, go);
     go();
   }
@@ -189,6 +191,7 @@ function LiveChat({ conversationId, initial, opener, title }: {
       form.append("audio", rec.audio, "recording");
       form.append("ms", String(Math.round(rec.ms)));
       form.append("peak", String(rec.peak));
+      form.append("voice", wantVoice() ? "1" : "0");
       void runTurn(() => fetch(`/api/chat/${conversationId}/talk`, { method: "POST", body: form }), null, go);
     };
     go();
@@ -200,7 +203,9 @@ function LiveChat({ conversationId, initial, opener, title }: {
     let raw = "";
     let over = false;
     try {
-      const response = await fetch(`/api/chat/${conversationId}/reply`, { method: "POST" });
+      const response = await fetch(`/api/chat/${conversationId}/reply`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ voice: wantVoice() }),
+      });
       await readEvents(response, (e) => {
         if (e.t === "delta") { raw += e.text; setStatus({ kind: "replying", raw }); }
         if (e.t === "reset") { raw = ""; setStatus({ kind: "replying", raw }); }
@@ -272,7 +277,7 @@ function LiveChat({ conversationId, initial, opener, title }: {
   // ─── Hold to talk ──────────────────────────────────────────────────────
   const mic = useHoldToTalk({
     onDone: sendSpoken,
-    onProblem: (message) => setStatus({ kind: "notice", message }),
+    onProblem: (message, detail) => setStatus({ kind: "notice", message, detail }),
   });
   const micUnavailable = mic.state === "blocked" || mic.state === "unsupported";
   useEffect(() => { if (micUnavailable) setMode("type"); }, [micUnavailable]);
@@ -288,6 +293,11 @@ function LiveChat({ conversationId, initial, opener, title }: {
   if (status.kind === "notice") ladduLine = { kind: "say", text: status.message };
   if (status.kind === "cap") ladduLine = { kind: "say", text: CAP_TEXT };
   if (!ladduLine && !opener) ladduLine = { kind: "say", text: "Enna pesalaam? Say anything in Tanglish. English words are fine!" };
+
+  // ⓘ card: closes by itself when Laddu says something new.
+  const [showEnglish, setShowEnglish] = useState(false);
+  const lineKey = ladduLine ? `${ladduLine.kind}:${ladduLine.text}` : "";
+  useEffect(() => setShowEnglish(false), [lineKey]);
 
   const blinkL = useBlink();
   const blinkMe = useBlink();
@@ -332,7 +342,9 @@ function LiveChat({ conversationId, initial, opener, title }: {
 
       <Stage
         ladduMouth={ladduMouth} ladduEyes={ladduEyes} myMouth={myMouth} myEyes={blinkMe ? "blink" : "open"}
-        ladduBubble={<><LadduSpeech line={ladduLine} />{voiceControls}</>}
+        ladduBubble={<LadduSpeech line={ladduLine} infoOpen={showEnglish} onInfo={() => setShowEnglish(!showEnglish)} />}
+        overlay={showEnglish && ladduLine?.kind === "line" && ladduLine.english
+          ? <EnglishCard english={ladduLine.english} onClose={() => setShowEnglish(false)} /> : null}
         myBubble={(
           <MySpeech
             attempts={mineAttempts}
@@ -344,6 +356,9 @@ function LiveChat({ conversationId, initial, opener, title }: {
           />
         )}
       />
+
+      {voiceControls}
+      {status.kind === "notice" && status.detail && <p className="notice-detail">({status.detail})</p>}
 
       {status.kind === "error" && <button className="error-box" onClick={status.retry}>{status.message}</button>}
       {status.kind === "nudge" && <button className="nudge-box" onClick={() => void reply()}>{NUDGE_TEXT}</button>}

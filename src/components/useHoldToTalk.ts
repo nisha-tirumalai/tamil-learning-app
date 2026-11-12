@@ -14,6 +14,22 @@ import { levelReader, sharedAudioContext } from "@/lib/voice/player";
 
 export type MicState = "idle" | "starting" | "recording" | "blocked" | "unsupported";
 
+/** Why a recording was turned away on the phone (shown small, to help find problems). */
+export type MicProblem = "short" | "quiet" | `mic-error:${string}`;
+
+type AudioSessionNav = Navigator & { audioSession?: { type: string } };
+/**
+ * iPhone: the page is set to "playback" so Laddu can be heard with the silent
+ * switch on, but "playback" can also switch the microphone off. So it's
+ * "play-and-record" while I hold 🎤, and back to "playback" afterwards.
+ */
+function audioSession(type: "play-and-record" | "playback") {
+  try {
+    const nav = navigator as AudioSessionNav;
+    if (nav.audioSession) nav.audioSession.type = type;
+  } catch { /* older Safari: nothing to do */ }
+}
+
 const MAX_MS = 30_000;
 
 function pickType(): string | undefined {
@@ -24,7 +40,7 @@ function pickType(): string | undefined {
 
 export function useHoldToTalk({ onDone, onProblem }: {
   onDone: (rec: { audio: Blob; ms: number; peak: number }) => void;
-  onProblem: (message: string) => void;
+  onProblem: (message: string, detail: MicProblem) => void;
 }) {
   const [state, setState] = useState<MicState>("idle");
   const [level, setLevel] = useState(0);
@@ -47,6 +63,7 @@ export function useHoldToTalk({ onDone, onProblem }: {
     cancelAnimationFrame(s.raf);
     s.disconnect();
     s.stream.getTracks().forEach((t) => t.stop());
+    audioSession("playback");
     setLevel(0);
   };
 
@@ -61,18 +78,20 @@ export function useHoldToTalk({ onDone, onProblem }: {
     if (holding.current || session.current) return;
     holding.current = true;
     setState("starting");
+    audioSession("play-and-record");
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
     } catch (e) {
       holding.current = false;
-      const name = (e as DOMException)?.name;
+      audioSession("playback");
+      const name = (e as DOMException)?.name ?? "unknown";
       setState(name === "NotAllowedError" || name === "SecurityError" ? "blocked" : "idle");
-      if (name !== "NotAllowedError" && name !== "SecurityError") handlers.current.onProblem(HEARING_ERROR_TEXT);
+      if (name !== "NotAllowedError" && name !== "SecurityError") handlers.current.onProblem(HEARING_ERROR_TEXT, `mic-error:${name}`);
       return;
     }
     // Let go while the permission question was showing: nothing to record.
-    if (!holding.current) { stream.getTracks().forEach((t) => t.stop()); setState("idle"); return; }
+    if (!holding.current) { stream.getTracks().forEach((t) => t.stop()); audioSession("playback"); setState("idle"); return; }
 
     const type = pickType();
     const recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
@@ -96,13 +115,17 @@ export function useHoldToTalk({ onDone, onProblem }: {
     } catch { read = null; }
 
     const s = {
-      recorder, stream, chunks, started: performance.now(), peak: read ? 0 : 1,
+      recorder, stream, chunks, started: performance.now(), peak: 0, heardAnything: false,
       timer: setTimeout(stop, MAX_MS), raf: 0, disconnect,
     };
     session.current = s;
     const tick = () => {
       if (session.current !== s || !read) return;
       const l = read();
+      // A real microphone is never perfectly silent (there's always a little
+      // hiss). Exactly zero means the meter isn't getting the sound (on iPhone
+      // the audio engine can pause while recording), not that I was quiet.
+      if (l > 0) s.heardAnything = true;
       // The meter's level is scaled ×4; the server's silence check uses the raw-ish 0–1 peak.
       s.peak = Math.max(s.peak, l / 4);
       setLevel(l);
@@ -116,9 +139,12 @@ export function useHoldToTalk({ onDone, onProblem }: {
       session.current = null;
       setState("idle");
       const audio = new Blob(chunks, { type: recorder.mimeType || type || "audio/webm" });
-      if (ms < VOICE_CONFIG.recording.minMs) return handlers.current.onProblem(TOO_SHORT_TEXT);
-      if (s.peak < VOICE_CONFIG.recording.minPeak) return handlers.current.onProblem(HEARING_ERROR_TEXT);
-      handlers.current.onDone({ audio, ms, peak: s.peak });
+      if (ms < VOICE_CONFIG.recording.minMs) return handlers.current.onProblem(TOO_SHORT_TEXT, "short");
+      // The meter couldn't hear the mic at all: don't guess, send it (peak 1 =
+      // "unknown") and let the hearing service decide.
+      const peak = s.heardAnything ? s.peak : 1;
+      if (peak < VOICE_CONFIG.recording.minPeak) return handlers.current.onProblem(HEARING_ERROR_TEXT, "quiet");
+      handlers.current.onDone({ audio, ms, peak });
     };
     recorder.start(250);
     setState("recording");

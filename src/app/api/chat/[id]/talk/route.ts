@@ -5,6 +5,7 @@
 import { dbLog } from "@/lib/calls";
 import { anthropicModel } from "@/lib/chat/model";
 import { ndjsonResponse } from "@/lib/chat/stream";
+import { withEarlyVoice } from "@/lib/voice/prepared";
 import { talkTurn } from "@/lib/chat/turn";
 import { createClient } from "@/lib/supabase/server";
 import { VOICE_CONFIG } from "@/lib/voice/config";
@@ -26,9 +27,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const peak = Number(form?.get("peak"));
   const { data: profile } = await db.from("profiles").select("display_name").eq("id", user.id).single();
   const log = dbLog(db);
-  return ndjsonResponse(() => talkTurn(
+  const voice = form?.get("voice") === "1";
+  return ndjsonResponse(() => withEarlyVoice(talkTurn(
     db, anthropicModel(log), configuredHearing(),
     { conversationId: id, recording: { audio, ms }, peak, displayName: profile?.display_name ?? null },
     log,
-  ), log.flush);
+  ), db, voice, log), log.flush);
 }

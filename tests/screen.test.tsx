@@ -7,7 +7,7 @@ import { chipFor } from "@/lib/chat/chip";
 import { toScore } from "@/lib/chat/scorer";
 import type { Attempt } from "@/lib/chat/turn";
 import { LadduBubble, MyTurn } from "@/components/Turns";
-import { LadduSpeech, MySpeech, Stage } from "@/components/Scene";
+import { EnglishCard, LadduSpeech, MySpeech, Stage } from "@/components/Scene";
 import { goodAnswer } from "./fixtures";
 
 const none = new Set<number>();
@@ -84,15 +84,15 @@ describe("the conversation scene (spec 003)", () => {
     expect(line).toContain('aria-expanded="false"');
     expect(html(<LadduSpeech line={{ kind: "say", text: "Aiyo" }} />)).not.toContain("<button");
   });
-  test("ⓘ on Laddu's bubble: there to tap, and the English card is closed until then", () => {
-    const line = html(<LadduSpeech line={{ kind: "line", text: "Evlo venum?", english: "How much do you need?" }} />);
+  test("ⓘ on Laddu's bubble opens a small card with the English (from the saved reply)", () => {
+    const line = html(<LadduSpeech line={{ kind: "line", text: "Evlo venum?", english: "How much do you need?" }} onInfo={() => {}} />);
     expect(line).toContain('class="info-button"');
     expect(line).toContain("What does that mean in English?");
-    expect(line).not.toContain("english-card");
-    expect(html(<LadduSpeech line={{ kind: "typing", text: "Evlo" }} />)).not.toContain("info-button");
-    const tapped = html(<LadduSpeech line={{ kind: "line", text: "Evlo venum?", english: "How much do you need?" }} defaultInfo />);
-    expect(tapped).toContain("english-card");
-    expect(tapped).toContain("<p>How much do you need?</p>");
+    expect(line).not.toContain("How much");
+    expect(html(<LadduSpeech line={{ kind: "typing", text: "Evlo" }} onInfo={() => {}} />)).not.toContain("info-button");
+    const card = html(<EnglishCard english="How much do you need?" onClose={() => {}} />);
+    expect(card).toContain("In English");
+    expect(card).toContain("<p>How much do you need?</p>");
   });
   test("my bubble: the ⭐ chip on its corner; spoken lines can be fixed, typed ones can't", () => {
     const spoken = html(<MySpeech attempts={[{ ...attempt(1), spoken: true }]} pending={none} listening={false} onChip={() => {}} onRescore={() => {}} onFix={() => {}} />);
@@ -105,8 +105,10 @@ describe("the conversation scene (spec 003)", () => {
   test("while I'm talking, my bubble shows that Laddu is listening", () => {
     expect(html(<MySpeech attempts={null} pending={none} listening onChip={() => {}} onRescore={() => {}} />)).toContain('aria-label="Listening"');
   });
-  test("both of us stand side by side, full body, facing each other; Laddu's mouth can open", () => {
+  test("the scene: cartoon background, both of us side by side facing each other; Laddu's mouth can open", () => {
     const out = html(<Stage ladduMouth="wide" ladduEyes="open" myMouth="closed" myEyes="blink" ladduBubble={null} myBubble={null} />);
+    expect(out).toContain('class="backdrop"');
+    expect(out).toContain("#ffd84d");   // the sun
     expect(out.indexOf("Laddu the teddy bear")).toBeLessThan(out.indexOf('aria-label="You"'));   // Laddu on the left
     expect(out).toContain("#7a2c22");   // an open mouth
   });
