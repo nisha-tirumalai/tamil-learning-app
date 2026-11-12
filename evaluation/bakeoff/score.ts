@@ -8,34 +8,9 @@
 //  2. An AI grader (Claude, only if ANTHROPIC_API_KEY is set, ~1 cent for all):
 //     words wrong, English words kept, and mistakes the service "fixed".
 
-const VOWELS: Record<string, string> = { "அ": "a", "ஆ": "aa", "இ": "i", "ஈ": "ii", "உ": "u", "ஊ": "uu", "எ": "e", "ஏ": "e", "ஐ": "ai", "ஒ": "o", "ஓ": "o", "ஔ": "au", "ஃ": "h" };
-const CONSONANTS: Record<string, string> = {
-  "க": "k", "ங": "ng", "ச": "s", "ஞ": "nj", "ட": "d", "ண": "n", "த": "th", "ந": "n", "ப": "p", "ம": "m", "ய": "y",
-  "ர": "r", "ல": "l", "வ": "v", "ழ": "zh", "ள": "l", "ற": "r", "ன": "n", "ஜ": "j", "ஷ": "sh", "ஸ": "s", "ஹ": "h",
-};
-// ஏ and ஓ become plain "e" and "o", the way Tanglish writes them (poren, not pooreen).
-const SIGNS: Record<string, string> = { "ா": "aa", "ி": "i", "ீ": "ii", "ு": "u", "ூ": "uu", "ெ": "e", "ே": "e", "ை": "ai", "ொ": "o", "ோ": "o", "ௌ": "au" };
-const VIRAMA = "்";
+import { hasTamil, transliterate } from "../../src/lib/voice/letters.ts";
 
-/** Tamil script → rough Latin letters. Latin text passes through unchanged. */
-export function transliterate(text: string): string {
-  let out = "";
-  const chars = [...text];
-  for (let i = 0; i < chars.length; i++) {
-    const c = chars[i];
-    if (CONSONANTS[c]) {
-      const next = chars[i + 1];
-      if (next === VIRAMA) { out += CONSONANTS[c]; i++; }
-      else if (next && SIGNS[next]) { out += CONSONANTS[c] + SIGNS[next]; i++; }
-      else out += CONSONANTS[c] + "a";
-    } else out += VOWELS[c] ?? c;
-  }
-  return out;
-}
-
-export function hasTamil(text: string): boolean {
-  return /[஀-௿]/.test(text);
-}
+export { hasTamil, transliterate };
 
 /** Squashes text to a sound skeleton (see the note at the top). */
 export function skeleton(text: string): string {

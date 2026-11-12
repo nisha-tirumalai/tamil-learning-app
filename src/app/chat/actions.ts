@@ -3,19 +3,26 @@
 // (row-level security applies) and calls the real model on the server only.
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { dbLog } from "@/lib/calls";
 import { anthropicModel, ModelNotConfigured } from "@/lib/chat/model";
 import {
-  type CardResult, deleteConversation, flagMessage, rescore, sendMessage, setMeaning, startConversation,
+  type CardResult, deleteConversation, fixHeard, flagMessage, rescore, sendMessage, setMeaning, startConversation,
 } from "@/lib/chat/turn";
 import { createClient } from "@/lib/supabase/server";
 import { ERROR_TEXT } from "@/lib/chat/config";
 
-async function withModel(run: (model: ReturnType<typeof anthropicModel>) => Promise<CardResult>): Promise<CardResult> {
+async function withModel(
+  db: Awaited<ReturnType<typeof createClient>>,
+  run: (model: ReturnType<typeof anthropicModel>) => Promise<CardResult>,
+): Promise<CardResult> {
+  const log = dbLog(db);
   try {
-    return await run(anthropicModel());
+    return await run(anthropicModel(log));
   } catch (e) {
     console.error("chat action failed:", (e as Error).message);
     return { ok: false, reason: "error", error: e instanceof ModelNotConfigured ? e.message : ERROR_TEXT };
+  } finally {
+    await log.flush();
   }
 }
 
@@ -27,17 +34,23 @@ export async function start(startedBy: "me" | "laddu") {
 
 export async function send(conversationId: string, text: string, retryOf: number | null = null) {
   const db = await createClient();
-  return withModel((model) => sendMessage(db, model, { conversationId, text, retryOf }));
+  return withModel(db, (model) => sendMessage(db, model, { conversationId, text, retryOf }));
 }
 
 export async function notWhatIMeant(messageId: number, meant: string) {
   const db = await createClient();
-  return withModel((model) => setMeaning(db, model, messageId, meant));
+  return withModel(db, (model) => setMeaning(db, model, messageId, meant));
 }
 
 export async function tryScoringAgain(messageId: number) {
   const db = await createClient();
-  return withModel((model) => rescore(db, model, messageId));
+  return withModel(db, (model) => rescore(db, model, messageId));
+}
+
+/** Spec 003: Laddu heard wrong; I type what I really said, and that gets scored. */
+export async function fixWhatISaid(messageId: number, text: string) {
+  const db = await createClient();
+  return withModel(db, (model) => fixHeard(db, model, messageId, text));
 }
 
 export async function flag(messageId: number, note: string) {

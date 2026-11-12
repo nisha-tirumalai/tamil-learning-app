@@ -5,7 +5,7 @@ import { FakeModel, loadPrompt } from "@/lib/chat/model";
 import { firstName, pickPraise, pickSituation } from "@/lib/chat/pick";
 import { checkScorerOutput, toScore } from "@/lib/chat/scorer";
 import { hasTamilScript } from "@/lib/chat/tamil";
-import { askScorer, buildThread, sceneText, splitReply, tutorTurns, type MessageRow } from "@/lib/chat/turn";
+import { askScorer, buildThread, sceneText, splitReply, tutorTurns, visiblePart, type MessageRow } from "@/lib/chat/turn";
 import { goodAnswer } from "./fixtures";
 
 
@@ -82,7 +82,7 @@ describe("Tamil-script guard", () => {
   test("nothing in the config or prompts has Tamil script", () => {
     expect(hasTamilScript([PRAISE_LINES, SITUATIONS])).toBe(false);
     expect(hasTamilScript(loadPrompt(CHAT_CONFIG.prompts.corrector, {}))).toBe(false);
-    expect(hasTamilScript(loadPrompt(CHAT_CONFIG.prompts.tutor, {}))).toBe(false);
+    // Spec 003: tutor v3 and the hearing prompt have Tamil script on purpose (examples for the voice line and for hearing). Prompts never reach the screen.
   });
 });
 
@@ -109,8 +109,17 @@ describe("small helpers", () => {
     expect(firstName(null)).toBe("friend");
   });
   test("splits Laddu's reply into Tanglish and English", () => {
-    expect(splitReply("Saapteeya, Nisha?\nHave you eaten, Nisha?")).toEqual({ text: "Saapteeya, Nisha?", english: "Have you eaten, Nisha?" });
-    expect(splitReply("\"Enna aachu?\"\n(What happened?)\n")).toEqual({ text: "Enna aachu?", english: "What happened?" });
+    expect(splitReply("Saapteeya, Nisha?\nHave you eaten, Nisha?")).toEqual({ text: "Saapteeya, Nisha?", english: "Have you eaten, Nisha?", tamil: null });
+    expect(splitReply("\"Enna aachu?\"\n(What happened?)\n")).toEqual({ text: "Enna aachu?", english: "What happened?", tamil: null });
+  });
+  test("spec 003: the third line (Tamil script, for his voice) is kept apart", () => {
+    expect(splitReply("Enna aachu?\nWhat happened?\nஎன்ன ஆச்சு?")).toEqual({ text: "Enna aachu?", english: "What happened?", tamil: "என்ன ஆச்சு?" });
+  });
+  test("spec 003: while streaming, only the first two lines may be shown", () => {
+    expect(visiblePart("Enna aa")).toBe("Enna aa");
+    expect(visiblePart("Enna aachu?\nWhat hap")).toBe("Enna aachu?\nWhat hap");
+    expect(visiblePart("Enna aachu?\nWhat happened?\nஎன்ன")).toBe("Enna aachu?\nWhat happened?");
+    expect(visiblePart("\nEnna aachu?\n\nWhat happened?\n")).toBe("\nEnna aachu?\n\nWhat happened?");
   });
   test("prompts fill in their placeholders", () => {
     const p = loadPrompt(CHAT_CONFIG.prompts.tutor, { name: "Nisha", scene: "SCENE" });
@@ -153,8 +162,16 @@ describe("what Laddu sees (spec 002)", () => {
     expect(sceneText(null, "Nisha", false)).toContain("Stay her friend");
     expect(sceneText(null, "Nisha", true)).toContain("Open the conversation");
   });
-  test("config uses tutor v2, and v1 is kept for comparison", () => {
-    expect(CHAT_CONFIG.prompts.tutor).toBe("tutor_system_v2");
+  test("spec 003: he sees his own earlier Tamil line too (so he keeps writing it)", () => {
+    const turns = tutorTurns([row(1, "laddu", { tamil: "வணக்கம்" }), row(2, "me")]);
+    expect(turns[1]).toEqual({ role: "assistant", content: "m1\ne\nவணக்கம்" });
+  });
+  test("spec 003: the screen's thread never carries the Tamil line", () => {
+    expect(JSON.stringify(buildThread([row(1, "laddu", { tamil: "வணக்கம்" })]))).not.toContain("வணக்கம்");
+  });
+  test("config uses tutor v3 (hidden Tamil line for the voice); v1 and v2 are kept", () => {
+    expect(CHAT_CONFIG.prompts.tutor).toBe("tutor_system_v3");
+    expect(loadPrompt("tutor_system_v3", { name: "Nisha", scene: "S" })).toContain("third line");
     expect(hasTamilScript(loadPrompt("tutor_system_v1", {}))).toBe(false);
     const v2 = loadPrompt("tutor_system_v2", { name: "Nisha", scene: "S" });
     expect(v2).toContain("ends with a question or an invitation");

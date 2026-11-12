@@ -3,7 +3,8 @@
 import { ERROR_TEXT } from "./config";
 import { ModelNotConfigured } from "./model";
 
-export function ndjsonResponse(events: () => AsyncIterable<object>): Response {
+/** `after` runs once the stream is done (e.g. to finish writing the call log). */
+export function ndjsonResponse(events: () => AsyncIterable<object>, after?: () => Promise<void>): Response {
   const encoder = new TextEncoder();
   const body = new ReadableStream({
     async start(controller) {
@@ -15,6 +16,7 @@ export function ndjsonResponse(events: () => AsyncIterable<object>): Response {
         send({ t: "error", message: e instanceof ModelNotConfigured ? e.message : ERROR_TEXT });
       }
       controller.close();
+      await after?.().catch(() => {});
     },
   });
   return new Response(body, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" } });

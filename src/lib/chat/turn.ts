@@ -7,6 +7,10 @@ import { type ChatModel, loadPrompt, type Turn } from "./model";
 import { findSituation, firstName, pickPraise, pickSituation } from "./pick";
 import { type Card, checkScorerOutput, type Score, type ScorerOutput, toScore } from "./scorer";
 import { hasTamilScript } from "./tamil";
+import type { CallLog } from "@/lib/calls";
+import { HEARING_ERROR_TEXT, TOO_LONG_TEXT, TOO_SHORT_TEXT } from "@/lib/voice/config";
+import { checkRecording, type RecordingProblem, toTanglish } from "@/lib/voice/heard";
+import { hear, type HearingService, type Recording } from "@/lib/voice/services";
 
 type Db = SupabaseClient;
 
@@ -15,22 +19,27 @@ export interface MessageRow {
   role: "me" | "laddu";
   text: string;
   english: string | null;
+  /** Laddu's hidden Tamil-script line (server only; buildThread never copies it). */
+  tamil?: string | null;
   meant: string | null;
   retry_of: number | null;
+  spoken?: boolean;
   created_at: string;
   scores: { grammar: number | null; spoken: number | null; total: number | null; mistake_types: string[]; card: Card }[]
     | { grammar: number | null; spoken: number | null; total: number | null; mistake_types: string[]; card: Card }
     | null;
 }
 
-export type Attempt = { id: number; text: string; meant: string | null; score: Score | null };
+/** `spoken`: I said it out loud (spec 003), so I can fix it if Laddu heard wrong. */
+export type Attempt = { id: number; text: string; meant: string | null; score: Score | null; spoken?: boolean };
 
 /** What the chat screen shows, in order. An original message carries its retries. */
 export type ThreadItem =
   | { type: "laddu"; id: number; text: string; english: string }
   | { type: "me"; id: number; attempts: Attempt[] };
 
-const MESSAGE_COLUMNS = "id, role, text, english, meant, retry_of, created_at, scores(grammar, spoken, total, mistake_types, card)";
+// Never add `tamil` here: this goes to the screen.
+const MESSAGE_COLUMNS = "id, role, text, english, meant, retry_of, spoken, created_at, scores(grammar, spoken, total, mistake_types, card)";
 
 function scoreOf(row: MessageRow): Score | null {
   const s = Array.isArray(row.scores) ? row.scores[0] : row.scores;
@@ -46,7 +55,7 @@ export function buildThread(rows: MessageRow[]): ThreadItem[] {
       items.push({ type: "laddu", id: row.id, text: row.text, english: row.english ?? "" });
       continue;
     }
-    const attempt: Attempt = { id: row.id, text: row.text, meant: row.meant, score: scoreOf(row) };
+    const attempt: Attempt = { id: row.id, text: row.text, meant: row.meant, score: scoreOf(row), ...(row.spoken ? { spoken: true } : {}) };
     const group = row.retry_of !== null ? byOriginal.get(row.retry_of) : undefined;
     if (group) group.push(attempt);
     else {
@@ -58,8 +67,9 @@ export function buildThread(rows: MessageRow[]): ThreadItem[] {
   return items;
 }
 
+/** Server-side reads also get Laddu's Tamil line, so he sees his own earlier lines whole. */
 async function loadMessages(db: Db, conversationId: string): Promise<MessageRow[]> {
-  const { data, error } = await db.from("messages").select(MESSAGE_COLUMNS)
+  const { data, error } = await db.from("messages").select(`${MESSAGE_COLUMNS}, tamil`)
     .eq("conversation_id", conversationId).order("id");
   if (error) throw new Error(error.message);
   return data as unknown as MessageRow[];
@@ -248,10 +258,32 @@ export type ReplyEvent =
   | { t: "cap" }
   | { t: "error"; message: string };
 
-/** Splits "Tanglish line\nEnglish line" into its two parts. */
-export function splitReply(raw: string): { text: string; english: string } {
+/**
+ * Splits Laddu's reply: "Tanglish line\nEnglish line\nTamil-script line".
+ * The Tamil script (spec 003) is only for his voice and never goes to the screen.
+ */
+export function splitReply(raw: string): { text: string; english: string; tamil: string | null } {
   const lines = raw.split("\n").map((l) => l.trim().replace(/^["“]|["”]$/g, "")).filter(Boolean);
-  return { text: lines[0] ?? "", english: lines.slice(1).join(" ").replace(/^\((.*)\)$/, "$1") };
+  const latin = lines.filter((l) => !hasTamilScript(l));
+  const tamil = lines.filter((l) => hasTamilScript(l)).join(" ");
+  return { text: latin[0] ?? "", english: latin.slice(1).join(" ").replace(/^\((.*)\)$/, "$1"), tamil: tamil || null };
+}
+
+/**
+ * The part of a reply (so far) that may be shown while it streams: his first
+ * two lines. The third line, Tamil script for his voice, is held back.
+ */
+export function visiblePart(raw: string): string {
+  let lines = 0;
+  for (let i = 0; i < raw.length;) {
+    const nl = raw.indexOf("\n", i);
+    const line = nl === -1 ? raw.slice(i) : raw.slice(i, nl);
+    if (line.trim()) lines++;
+    if (nl === -1) return raw;
+    if (lines === 2) return raw.slice(0, nl);
+    i = nl + 1;
+  }
+  return raw;
 }
 
 /**
@@ -263,7 +295,10 @@ export function tutorTurns(rows: MessageRow[]): Turn[] {
   const turns: Turn[] = [];
   for (const item of buildThread(rows)) {
     let turn: Turn;
-    if (item.type === "laddu") turn = { role: "assistant", content: `${item.text}\n${item.english}` };
+    if (item.type === "laddu") {
+      const tamil = rows.find((r) => r.id === item.id)?.tamil;
+      turn = { role: "assistant", content: [item.text, item.english, tamil].filter(Boolean).join("\n") };
+    }
     else {
       const meant = item.attempts.find((a) => a.meant)?.meant;
       turn = { role: "user", content: item.attempts.at(-1)!.text + (meant ? `\n(Nisha says she meant: ${meant})` : "") };
@@ -290,9 +325,10 @@ export function sceneText(situationKey: string | null, name: string, opening: bo
 }
 
 /**
- * Laddu's reply (or opener, for "Laddu starts"), streamed. Tamil script is
- * caught before it leaves the server: the attempt is dropped, retried once,
- * and replaced by the friendly error if it happens again.
+ * Laddu's reply (or opener, for "Laddu starts"), streamed. Only his first two
+ * lines (Tanglish, English) are sent; the hidden Tamil-script line is saved for
+ * his voice. Tamil script on the first two lines is caught before it leaves the
+ * server: the attempt is dropped, retried once, then the friendly error.
  */
 export async function* replyStream(
   db: Db, model: ChatModel, conversationId: string, displayName: string | null,
@@ -308,12 +344,17 @@ export async function* replyStream(
 
   for (let attempt = 0; attempt < 2; attempt++) {
     let full = "";
+    let shown = "";
     let tamil = false;
     try {
-      for await (const piece of model.reply({ system, messages })) {
-        if (hasTamilScript(piece)) { tamil = true; break; }
+      for await (const piece of model.reply({ system, messages, job: opening ? "opener" : "reply" })) {
         full += piece;
-        yield { t: "delta", text: piece };
+        const visible = visiblePart(full);
+        const add = visible.slice(shown.length);
+        if (!add) continue;
+        if (hasTamilScript(add)) { tamil = true; break; }
+        shown = visible;
+        yield { t: "delta", text: add };
       }
     } catch (e) {
       console.warn("tutor reply failed:", (e as Error).message);
@@ -322,13 +363,13 @@ export async function* replyStream(
     }
     if (tamil) {
       console.warn("tutor reply had Tamil script; dropped");
-      if (full) yield { t: "reset" };
+      if (shown) yield { t: "reset" };
       continue;
     }
-    const { text, english } = splitReply(full);
+    const { text, english, tamil: forVoice } = splitReply(full);
     if (!text) { yield { t: "error", message: ERROR_TEXT }; return; }
     const { data, error } = await db.from("messages")
-      .insert({ conversation_id: conversationId, role: "laddu", text, english: english || null })
+      .insert({ conversation_id: conversationId, role: "laddu", text, english: english || null, tamil: forVoice })
       .select("id").single();
     if (error || !data) { yield { t: "error", message: ERROR_TEXT }; return; }
     await touch(db, conversationId);
@@ -343,6 +384,8 @@ export async function* replyStream(
 
 export type TurnEvent =
   | ReplyEvent
+  | { t: "heard"; text: string }                                    // spec 003: what Laddu heard me say
+  | { t: "hearing_error"; message: string; problem: RecordingProblem | "failed" }
   | { t: "saved"; messageId: number }
   | { t: "score"; messageId: number; score: Score }
   | { t: "score_error"; messageId: number };
@@ -366,7 +409,13 @@ export async function* sendTurn(
   if (error || !data) { yield { t: "error", message: ERROR_TEXT }; return; }
   const messageId = data.id as number;
   yield { t: "saved", messageId };
+  yield* replyAndScore(db, model, input.conversationId, messageId, input.displayName);
+}
 
+/** After my message is saved: Laddu's reply and the score, at the same time. */
+async function* replyAndScore(
+  db: Db, model: ChatModel, conversationId: string, messageId: number, displayName: string | null,
+): AsyncGenerator<TurnEvent> {
   // Both jobs push into one queue; this loop hands events out in arrival order.
   const queue: TurnEvent[] = [];
   let wake: (() => void) | null = null;
@@ -378,7 +427,7 @@ export async function* sendTurn(
     (e) => { console.warn("score failed:", (e as Error).message); push({ t: "score_error", messageId }); },
   );
   const replying = (async () => {
-    for await (const e of replyStream(db, model, input.conversationId, input.displayName)) push(e);
+    for await (const e of replyStream(db, model, conversationId, displayName)) push(e);
   })().catch((e) => { console.warn("reply failed:", (e as Error).message); push({ t: "error", message: ERROR_TEXT }); });
   void Promise.all([scoring, replying]).then(() => { finished = true; wake?.(); });
 
@@ -387,6 +436,71 @@ export async function* sendTurn(
     if (finished) return;
     await new Promise<void>((resolve) => { wake = resolve; });
   }
+}
+
+// ─── Talking out loud (spec 003) ───────────────────────────────────────────
+
+const PROBLEM_TEXT: Record<RecordingProblem, string> = {
+  too_short: TOO_SHORT_TEXT, too_long: TOO_LONG_TEXT, silent: HEARING_ERROR_TEXT, missing: HEARING_ERROR_TEXT,
+};
+
+/**
+ * I hold 🎤 and speak: check the recording (a bad one is rejected before any
+ * paid call and doesn't count), count it like a typed message, hear it, turn
+ * it into Tanglish, save it, then Laddu's reply + the score as for typing.
+ * The audio itself is never stored.
+ */
+export async function* talkTurn(
+  db: Db, model: ChatModel, hearing: HearingService[],
+  input: { conversationId: string; recording: Recording; peak: number; displayName: string | null },
+  log?: CallLog,
+): AsyncGenerator<TurnEvent> {
+  const { recording } = input;
+  const problem = checkRecording({ bytes: recording.audio.size, ms: recording.ms, peak: input.peak });
+  if (problem) { yield { t: "hearing_error", problem, message: PROBLEM_TEXT[problem] }; return; }
+  if (!(await useOneMessage(db))) { yield { t: "cap" }; return; }
+
+  let text: string;
+  try {
+    const heard = await hear(hearing, recording, log);
+    text = (await toTanglish(model, heard.text)).slice(0, 2000);
+  } catch {
+    yield { t: "hearing_error", problem: "failed", message: HEARING_ERROR_TEXT };
+    return;
+  }
+  if (!text) { yield { t: "hearing_error", problem: "silent", message: HEARING_ERROR_TEXT }; return; }
+  yield { t: "heard", text };
+
+  const { data, error } = await db.from("messages")
+    .insert({ conversation_id: input.conversationId, role: "me", text, heard: text, spoken: true })
+    .select("id").single();
+  if (error || !data) { yield { t: "error", message: ERROR_TEXT }; return; }
+  const messageId = data.id as number;
+  yield { t: "saved", messageId };
+  yield* replyAndScore(db, model, input.conversationId, messageId, input.displayName);
+}
+
+/**
+ * "Laddu heard wrong": I type what I really said. The fixed text replaces the
+ * bubble and is scored instead (counts like a try again), so a hearing mistake
+ * is never counted as my mistake. What he first heard is kept in `heard`.
+ */
+export async function fixHeard(db: Db, model: ChatModel, messageId: number, fixed: string): Promise<CardResult> {
+  const clean = fixed.trim().slice(0, 2000);
+  if (!clean) return { ok: false, messageId, reason: "error", error: "Type what you said first." };
+  const { data: msg } = await db.from("messages").select("role, spoken").eq("id", messageId).single();
+  if (!msg || msg.role !== "me" || !msg.spoken) return { ok: false, messageId, reason: "error", error: ERROR_TEXT };
+  if (!(await useOneMessage(db))) return { ok: false, messageId, reason: "cap", error: "cap" };
+  const { error } = await db.from("messages").update({ text: clean }).eq("id", messageId);
+  if (error) return { ok: false, messageId, reason: "error", error: ERROR_TEXT };
+  return scoreMessage(db, model, messageId);
+}
+
+/** What Laddu's voice reads for one of his lines: the hidden Tamil script, else the Tanglish. */
+export async function voiceText(db: Db, messageId: number): Promise<string | null> {
+  const { data } = await db.from("messages").select("role, text, tamil").eq("id", messageId).single();
+  if (!data || data.role !== "laddu") return null;
+  return (data.tamil as string | null) || (data.text as string);
 }
 
 // ─── Past chats, flags, delete ─────────────────────────────────────────────

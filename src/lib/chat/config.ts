@@ -14,9 +14,13 @@ export const CHAT_CONFIG = {
   prompts: {
     /** v3: like v2 (spelling and short forms never mistakes, keeps time words, lists mistakes then scores), plus: a meaning Nisha types herself wins over her words. v1 and v2 kept for comparison. */
     corrector: "corrector_scorer_v3",
-    /** v2 (spec 002): stays in the scene, ends with a question. v1 is kept for comparison. */
-    tutor: "tutor_system_v2",
+    /** v3 (spec 003): like v2, plus a hidden third line in Tamil script for Laddu's voice. v1 and v2 kept. */
+    tutor: "tutor_system_v3",
+    /** Spec 003: turns what the hearing service wrote (often Tamil script) into Tanglish, word for word. */
+    tanglish: "hearing_to_tanglish_v1",
   },
+  /** Rough list prices in US dollars per million tokens, for the call log's cost estimate (spec 003). */
+  pricePerMillion: { input: 0.10, output: 0.50 },
 } as const;
 
 /** The only mistake types the scorer may use (SCOPING §1a). */
