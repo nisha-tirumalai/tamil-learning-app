@@ -128,6 +128,14 @@ spec. Hearing and voice can come from different services.
       unless she says otherwise; only the finished drawings go in.
 
 **Rules that always hold**
+- [ ] **Every external call is logged** (added 2026-11-12): each call to Claude,
+      ElevenLabs or Azure writes one private row to a log table in Supabase:
+      service, job (score, reply, opener, hint, hearing, voice), model or voice,
+      how long it took (until it started and until it finished), size (tokens,
+      characters or seconds of audio), estimated cost, and any error. **No chat
+      text or audio in the log.** The dashboard page that shows it is phase 7.
+- [ ] **Hearing and voice services are each one setting** in the config, so
+      either can be switched without code changes.
 - [ ] **Daily cap:** each spoken message counts like a typed one. A recording
       that's too short, silent or longer than 30 s is rejected before any paid
       call, and doesn't count.
@@ -194,6 +202,20 @@ and mute works on the bus.
    Azure, Google Cloud, ElevenLabs), and add their keys as Codespaces secrets.
 4. **Listen to the voice samples** (with amma if you can) and pick Laddu's voice.
 5. **Describe Laddu's look**, or share teddy pictures you like.
+
+## Bake-off results and decisions (2026-11-11/12)
+
+- **Hearing: ElevenLabs** (Scribe v2): 6% errors vs Azure's 12%; kept 37/37
+  English words (Azure 30/33); "fixed" my grammar 3 times (Azure 6); 0.6 s vs 0.8 s.
+- **Laddu's voice: ElevenLabs preferred** ("infinitely better" than Azure to
+  Nisha). Its Tamil library voices (e.g. Velan) need a paid plan to use through
+  the API; the free plan only allows built-in voices like Charlie (an English
+  voice). **Placeholder until decided: Azure `ta-IN-Valluvar:DragonLatestNeural`
+  (no pitch change)**, the best-sounding Azure voice.
+- **Voice matters a little more than hearing.** If ElevenLabs credits run low,
+  switch **hearing** to Azure first and keep ElevenLabs for Laddu's voice.
+- Azure's free tier throttles quick bursts of requests ("429"); the bake-off
+  should pause between Azure calls.
 
 ## Decided by Nisha (2026-11-10)
 
