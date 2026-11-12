@@ -31,20 +31,34 @@ export type LadduLine =
   | { kind: "typing"; text: string }
   | { kind: "say"; text: string };          // a line that isn't saved (cap, couldn't hear…)
 
-export function LadduSpeech({ line }: { line: LadduLine | null }) {
+export function LadduSpeech({ line, defaultInfo = false }: { line: LadduLine | null; defaultInfo?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [info, setInfo] = useState(defaultInfo);
   const key = line ? `${line.kind}:${line.text}` : "";
-  useEffect(() => setOpen(false), [key]);
+  useEffect(() => { setOpen(false); setInfo(false); }, [key]);
   if (!line) return <div className="speech laddu-speech empty" aria-hidden="true" />;
   if (line.kind === "line" && line.english) {
+    // Tap the bubble: the English shows inside it. Tap ⓘ: a small card with the
+    // English. Both use the English saved with the reply: no extra AI or voice call.
     return (
-      <button type="button" key={key} className="speech laddu-speech pop tappable" onClick={() => setOpen(!open)}
-        aria-expanded={open} aria-label={open ? undefined : `Laddu: ${line.text} (tap for the English)`}>
-        <span className="speech-scroll">
-          <span className="tanglish">{line.text}</span>
-          {open && <span className="english">{line.english}</span>}
-        </span>
-      </button>
+      <>
+        <div key={key} className="speech laddu-speech pop has-info">
+          <button type="button" className="speech-scroll speech-tap" onClick={() => setOpen(!open)}
+            aria-expanded={open} aria-label={open ? undefined : `Laddu: ${line.text} (tap for the English)`}>
+            <span className="tanglish">{line.text}</span>
+            {open && <span className="english">{line.english}</span>}
+          </button>
+          <button type="button" className="info-button" onClick={() => setInfo(!info)} aria-expanded={info}
+            aria-label="What does that mean in English?">ⓘ</button>
+        </div>
+        {info && (
+          <div className="english-card" role="note">
+            <span className="english-card-label">In English</span>
+            <p>{line.english}</p>
+            <button type="button" className="link-button" onClick={() => setInfo(false)} aria-label="Close">✕</button>
+          </div>
+        )}
+      </>
     );
   }
   return (

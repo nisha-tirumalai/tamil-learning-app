@@ -268,3 +268,20 @@ button.speech.tappable { padding: 0.45rem 0.8rem; }
   .top nav { flex-wrap: nowrap; overflow-x: auto; gap: 0.8rem; font-size: 0.9rem; white-space: nowrap; scrollbar-width: none; }
   .top .link-button { margin: 0; font-size: 0.85rem; white-space: nowrap; }
 }
+
+/* ⓘ on Laddu's bubble (spec 003): a small card with the English. */
+.speech.has-info { padding-right: 2.1rem; }
+.speech-tap { background: none; color: inherit; margin: 0; padding: 0; font: inherit; font-weight: 400; text-align: left; width: 100%; }
+.info-button {
+  position: absolute; top: 0.35rem; right: 0.4rem; margin: 0; padding: 0; width: 1.6rem; height: 1.6rem;
+  border-radius: 50%; background: var(--surface); color: var(--accent); border: 1.5px solid var(--accent);
+  font-size: 0.95rem; line-height: 1; font-weight: 700;
+}
+.info-button[aria-expanded="true"] { background: var(--accent); color: var(--accent-text); }
+.english-card {
+  position: relative; max-width: 80%; margin: -0.2rem 0 0.4rem; padding: 0.45rem 2rem 0.5rem 0.8rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 0.75rem; box-shadow: 0 2px 8px rgb(0 0 0 / 0.12);
+}
+.english-card p { margin: 0.1rem 0 0; }
+.english-card-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.english-card .link-button { position: absolute; top: 0.25rem; right: 0.5rem; margin: 0; }

@@ -84,6 +84,16 @@ describe("the conversation scene (spec 003)", () => {
     expect(line).toContain('aria-expanded="false"');
     expect(html(<LadduSpeech line={{ kind: "say", text: "Aiyo" }} />)).not.toContain("<button");
   });
+  test("ⓘ on Laddu's bubble: there to tap, and the English card is closed until then", () => {
+    const line = html(<LadduSpeech line={{ kind: "line", text: "Evlo venum?", english: "How much do you need?" }} />);
+    expect(line).toContain('class="info-button"');
+    expect(line).toContain("What does that mean in English?");
+    expect(line).not.toContain("english-card");
+    expect(html(<LadduSpeech line={{ kind: "typing", text: "Evlo" }} />)).not.toContain("info-button");
+    const tapped = html(<LadduSpeech line={{ kind: "line", text: "Evlo venum?", english: "How much do you need?" }} defaultInfo />);
+    expect(tapped).toContain("english-card");
+    expect(tapped).toContain("<p>How much do you need?</p>");
+  });
   test("my bubble: the ⭐ chip on its corner; spoken lines can be fixed, typed ones can't", () => {
     const spoken = html(<MySpeech attempts={[{ ...attempt(1), spoken: true }]} pending={none} listening={false} onChip={() => {}} onRescore={() => {}} onFix={() => {}} />);
     expect(spoken).toContain("chip corner");
