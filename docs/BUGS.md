@@ -9,6 +9,7 @@ step, what I expected, what actually happened (exact message), and any clues
 
 | # | Found | Bug | Status |
 |---|---|---|---|
+| 12 | 2026-11-13 | Welcome screen tiny, "Hear Laddu" button looked switched off | 🟡 fix ready, check on phone |
 | 11 | 2026-11-13 | Scorer corrects my words before scoring them | 🔍 looking into it |
 | 10 | 2026-11-13 | Welcome screen: Laddu's voice is silent | 🟡 fix ready, check on phone |
 | 9 | 2026-11-12 | Hold to talk fails on iPhone | ✅ fixed (tested on iPhone 2026-11-13) |
@@ -22,6 +23,21 @@ step, what I expected, what actually happened (exact message), and any clues
 | 1 | 2026-11-07 | Magic-link login says "expired" when opened in a different browser | 🟡 workaround |
 
 ## Details
+
+### 12. Welcome screen tiny, "Hear Laddu" button looked switched off
+- **Found:** 2026-11-13, first look at the new welcome screen.
+- **Happened:** the welcome was a small box at the top of the screen with empty
+  space below. Laddu was a fixed small size, the buttons were small, and
+  "🔊 Hear Laddu" faded in and out so much it looked switched off.
+- **Why:** the welcome reused the old plain layout (sizes in fixed pixels, no
+  full-height layout), and its "notice me" animation faded the button's colour
+  instead of making it glow.
+- **Fixed:** the welcome now fills the whole screen under the top menu: his
+  line at the top in large text, Laddu in the middle, sized to about a third
+  of the screen's height, and two big full-width buttons at the bottom.
+  "Hear Laddu" is green with a soft glow instead of fading. Checked in a
+  browser at iPhone SE, iPhone 13, Pixel 7 and laptop sizes: everything fits
+  with no scrolling, and all three buttons (ⓘ, Hear Laddu, Choose your avatar) work.
 
 ### 11. Scorer corrects my words before scoring them
 - **Found:** 2026-11-13, phone test.

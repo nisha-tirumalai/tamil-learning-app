@@ -51,12 +51,17 @@ export function LadduIntro() {
           aria-label="What does that mean in English?">ⓘ</button>
       </div>
       {showEnglish && <EnglishCard english={INTRO.english} onClose={() => setShowEnglish(false)} />}
-      <Laddu size={190} crop="full" mouth={speaking ? mouthFor(level) : "closed"} eyes={blink ? "blink" : "happy"} />
-      <button type="button" className={heard ? "secondary hear-again" : "hear-button"} onClick={() => void hear()} disabled={speaking}>
-        {heard ? "🔁 Hear it again" : "🔊 Hear Laddu"}
-      </button>
-      {failed && <p className="notice-detail">Laddu&apos;s voice didn&apos;t load. Try again in a moment.</p>}
-      <Link className="button-link" href="/choose-avatar">Choose your avatar (girl or guy) ›</Link>
+      {/* Laddu grows to fit the screen (see .intro-laddu in globals.css). */}
+      <div className="intro-laddu">
+        <Laddu size={190} crop="full" mouth={speaking ? mouthFor(level) : "closed"} eyes={blink ? "blink" : "happy"} />
+      </div>
+      <div className="intro-buttons">
+        <button type="button" className={heard ? "hear-again" : "hear-button"} onClick={() => void hear()} disabled={speaking}>
+          {heard ? "🔁 Hear it again" : "🔊 Hear Laddu"}
+        </button>
+        {failed && <p className="notice-detail">Laddu&apos;s voice didn&apos;t load. Try again in a moment.</p>}
+        <Link className="button-link" href="/choose-avatar">Choose your avatar (girl or guy) ›</Link>
+      </div>
     </div>
   );
 }

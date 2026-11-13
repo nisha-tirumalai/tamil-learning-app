@@ -10,7 +10,6 @@ import { checkRecording, toTanglish } from "@/lib/voice/heard";
 import { type AudioLike, mouthFor, VoicePlayer } from "@/lib/voice/player";
 import { forgetIntroVoice, INTRO_TAMIL, introVoice } from "@/lib/voice/intro";
 import { INTRO } from "@/lib/chat/config";
-import { hasTamilScript } from "@/lib/chat/tamil";
 import { configuredHearing, configuredVoice, FakeHearing, FakeVoice, hear, speak } from "@/lib/voice/services";
 
 const rec = (ms = 3000) => ({ audio: new Blob([new Uint8Array(20_000)], { type: "audio/webm" }), ms });
