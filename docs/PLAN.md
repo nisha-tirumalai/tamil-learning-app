@@ -17,8 +17,12 @@ decisions. Update it at the end of every phase.
 4. **Secrets only in GitHub Codespaces secrets**, never in files. The repo is public.
    `.env*` stays gitignored anyway, as a safety net.
 
-## Where we are (2026-11-12)
+## Where we are (2026-11-13)
 
+- **2026-11-13, second phone test passed:** iPhone hold-to-talk works, a spoken turn takes **2.3 s** (target 3 s), Charlie sounds Tamil every time, the scene background is there (bugs 6–9 closed). **Built today, waiting for Nisha's phone check:**
+  1. **Welcome from Laddu** (`/welcome`, `src/components/LadduIntro.tsx`): "Vanakkam! Naan Laddu. Tamil-la pesalaam!" with ⓘ for the English, a **🔊 Hear Laddu** button (phones need a tap before sound, bug 10), then "Choose your avatar". New users go `/` → `/welcome` → `/choose-avatar`. His voice comes from `/api/speech/intro` (Tamil script in `src/lib/voice/intro.ts`, server only), made once per server start. Nisha already has an avatar, so to see it: open `/welcome`.
+  2. **💡 low-score hint** (`TryHint` in `Scene.tsx`, `lowScoreHint` in `chip.ts`): when my latest line scores below 7 (`HINT_BELOW` in config), a small card over the lower right of the scene: "💡 Try: *better way*", ⓘ for English, ✕ to hide. Reuses the scorer's `better`, so **no extra AI call**. Hidden while recording.
+  - **Open:** bug 11 (scorer corrects my words before scoring), needs examples from Nisha.
 - **2026-11-12, after the first phone test:** fixes for bugs 6–9 (see [BUGS.md](BUGS.md)): iPhone mic, scene background as in the approved draft, reply-first speed (tutor prompt **v4**: hidden Tamil line first; voice started by key the moment it's written, `src/lib/voice/prepared.ts`; spoken turns reply to what was heard while the bubble text and score run in the background), Charlie always reads Tamil script (`tamilScript` fallback, `language_code: "ta"`). No new migration. **Still to build from the spec's new items:** the welcome screen where Laddu introduces himself, and the low-score "💡 Try: …" hint. **Open choice for Nisha:** ElevenLabs Flash (faster) vs multilingual v2 (her pick) for Charlie.
 - **2026-11-12: Spec 003 (voice) built, waiting for Nisha's on-phone check.** All 126 tests pass (`npm run test:db`); live check of ElevenLabs (hearing + Charlie) and Azure hearing with iPhone (m4a) and Chrome (webm) audio: all worked. Needs Nisha:
   1. **Paste `supabase/migrations/20261113000000_voice.sql` into the Supabase SQL Editor and Run** (and `20261112000000_avatar.sql` first, if not done yet).

@@ -8,6 +8,9 @@ import { hasTamilScript } from "@/lib/chat/tamil";
 import { HEARING_ERROR_TEXT, TOO_LONG_TEXT, TOO_SHORT_TEXT, VOICE_CONFIG } from "@/lib/voice/config";
 import { checkRecording, toTanglish } from "@/lib/voice/heard";
 import { type AudioLike, mouthFor, VoicePlayer } from "@/lib/voice/player";
+import { forgetIntroVoice, INTRO_TAMIL, introVoice } from "@/lib/voice/intro";
+import { INTRO } from "@/lib/chat/config";
+import { hasTamilScript } from "@/lib/chat/tamil";
 import { configuredHearing, configuredVoice, FakeHearing, FakeVoice, hear, speak } from "@/lib/voice/services";
 
 const rec = (ms = 3000) => ({ audio: new Blob([new Uint8Array(20_000)], { type: "audio/webm" }), ms });
@@ -168,5 +171,29 @@ describe("the voice player on the phone", () => {
   });
   test("mouth shapes follow loudness", () => {
     expect([0, 0.2, 0.6].map(mouthFor)).toEqual(["closed", "open", "wide"]);
+  });
+});
+
+describe("Laddu's self-introduction on the welcome screen (spec 003)", () => {
+  test("the voice reads the Tamil-script line, made once and kept (one voice call)", async () => {
+    forgetIntroVoice();
+    const voice = new FakeVoice();
+    const log = memoryLog();
+    await introVoice(voice, log);
+    await introVoice(voice, log);
+    expect(voice.calls).toEqual([INTRO_TAMIL]);
+    expect(log.entries).toHaveLength(1);
+  });
+  test("if the voice fails, the next visit tries again", async () => {
+    forgetIntroVoice();
+    await expect(introVoice(new FakeVoice(true), memoryLog())).rejects.toThrow();
+    const voice = new FakeVoice();
+    await introVoice(voice, memoryLog());
+    expect(voice.calls).toHaveLength(1);
+    forgetIntroVoice();
+  });
+  test("what the screen shows has no Tamil script", () => {
+    expect(hasTamilScript(INTRO)).toBe(false);
+    expect(INTRO.tanglish).toBe("Vanakkam! Naan Laddu. Tamil-la pesalaam!");
   });
 });

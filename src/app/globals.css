@@ -319,3 +319,28 @@ button.speech.tappable { padding: 0.45rem 0.8rem; }
 /* iPhone: holding the mic must never open Safari's text-selection or "copy" menu (it cuts the press short). */
 .talk-bar, .talk-bar * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .mic * { pointer-events: none; }
+
+/* Welcome (spec 003): Laddu introduces himself before "Choose your avatar". */
+.intro { gap: 0.6rem; }
+.intro .intro-speech { max-width: 22rem; margin-bottom: 0.2rem; }
+.intro .intro-speech .tanglish { font-size: 1.25rem; }
+.intro .intro-speech::after { left: calc(50% - 0.5rem); }
+.intro .english-card { max-width: 22rem; text-align: left; }
+.intro .hear-button, .intro .hear-again { margin: 0; }
+.button-link {
+  display: inline-block; padding: 0.6rem 1.1rem; border-radius: 0.5rem; background: var(--accent);
+  color: var(--accent-text); text-decoration: none; font-weight: 600;
+}
+
+/* 💡 Try: … (spec 003): a small card near my bubble when I scored below 7. */
+.hint-wrap { position: absolute; z-index: 3; right: 3%; bottom: 5%; width: 56%; }
+.try-hint {
+  position: relative; background: #fffbe6; color: #2b1d16; border: 2px solid #2b1d16; border-radius: 0.8rem;
+  padding: 0.35em 3.6em 0.4em 0.6em; font-size: clamp(0.72rem, 3.7cqi, 0.9rem); box-shadow: 0 3px 10px rgb(0 0 0 / 0.15);
+  overflow-wrap: anywhere;
+}
+.try-hint p { margin: 0; }
+.try-hint .english { color: #7a6656; margin-top: 0.15em; }
+.try-hint-buttons { position: absolute; top: 0.25em; right: 0.3em; display: flex; gap: 0.3em; align-items: center; }
+.try-hint .info-button { position: static; width: 1.45em; height: 1.45em; font-size: 1em; background: #fff; }
+.try-hint .link-button { margin: 0; padding: 0 0.2em; color: #7a6656; }

@@ -79,6 +79,17 @@ export const SITUATIONS: { key: string; title: string; role: string; polite: boo
   { key: "clothes", title: "Shopping for clothes", role: "the shop assistant at a clothes shop", polite: true },
 ];
 
+/**
+ * Laddu introduces himself on the welcome screen, before "Choose your avatar"
+ * (spec 003). The Tamil-script version for his voice is in
+ * src/lib/voice/intro.ts (server only, never sent to the screen).
+ */
+export const INTRO = { tanglish: "Vanakkam! Naan Laddu. Tamil-la pesalaam!", english: "Hi, I'm Laddu. Let's talk in Tamil!" };
+/** What the phone asks for to hear the intro: /api/speech/intro */
+export const INTRO_VOICE_REF = "intro";
+/** The 💡 hint near my bubble appears when my score is below this (spec 003). */
+export const HINT_BELOW = 7;
+
 export const WELCOME = { tanglish: (name: string) => `Vaanga, ${name}!`, english: (name: string) => `Come on in, ${name}!` };
 
 export const ERROR_TEXT = "Aiyo! Something broke on my side 😅 Your message is safe, tap to try again.";

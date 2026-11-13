@@ -1,5 +1,5 @@
 // What the small chip under one of my messages shows (spec 002).
-import { CHIP_TEXT } from "./config";
+import { CHIP_TEXT, HINT_BELOW } from "./config";
 import type { Attempt } from "./turn";
 
 export type Chip =
@@ -27,4 +27,18 @@ export function chipFor(attempts: Attempt[], pending: ReadonlySet<number>, readO
   if (card.kind === "all_english") return { kind: "open", label: CHIP_TEXT.allEnglish };
   if (card.praise) return { kind: "open", label: before ? `⭐ ${before}10 · ${card.praise.tanglish}` : card.praise.tanglish };
   return { kind: "open", label: `⭐ ${before}${score.total}` };
+}
+
+/**
+ * The small "💡 Try: …" card near my bubble (spec 003): shown when my latest
+ * line scored below 7. It reuses the better way the scorer already wrote, so
+ * it costs no extra AI call. null = no hint (good score, score still coming,
+ * all English, safety, or no score).
+ */
+export function lowScoreHint(attempts: Attempt[] | null, pending: ReadonlySet<number>): { id: number; better: string; english: string } | null {
+  const latest = attempts?.at(-1);
+  if (!latest || pending.has(latest.id) || !latest.score) return null;
+  const { total, card } = latest.score;
+  if (card.kind !== "scored" || total === null || total >= HINT_BELOW || !card.better.trim()) return null;
+  return { id: latest.id, better: card.better, english: card.better_english };
 }

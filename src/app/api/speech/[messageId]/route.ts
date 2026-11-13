@@ -7,6 +7,7 @@
 import { dbLog } from "@/lib/calls";
 import { voiceText } from "@/lib/chat/turn";
 import { createClient } from "@/lib/supabase/server";
+import { INTRO_REF, introVoice } from "@/lib/voice/intro";
 import { takeVoice } from "@/lib/voice/prepared";
 import { configuredVoice, speak } from "@/lib/voice/services";
 
@@ -16,6 +17,18 @@ export async function GET(_request: Request, { params }: { params: Promise<{ mes
   const { data: { user } } = await db.auth.getUser();
   if (!user) return new Response("Not signed in", { status: 401 });
   const headers = { "Content-Type": "audio/mpeg", "Cache-Control": "private, max-age=86400" };
+
+  // His self-introduction on the welcome screen (the same line for everyone).
+  if (ref === INTRO_REF) {
+    const log = dbLog(db);
+    try {
+      return new Response(await introVoice(configuredVoice(), log), { headers });
+    } catch {
+      return new Response("Voice failed", { status: 502 });
+    } finally {
+      await log.flush();
+    }
+  }
 
   // A key: his voice was started early, while his reply was still being written.
   if (!/^\d+$/.test(ref)) {

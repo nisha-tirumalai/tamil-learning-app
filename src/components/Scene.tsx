@@ -111,6 +111,28 @@ export function MySpeech({ attempts, pending, listening, onChip, onRescore, onFi
   );
 }
 
+/**
+ * "💡 Try: …" (spec 003): a small card near my bubble when I scored below 7,
+ * with the better way in Tanglish; ⓘ shows its English. It sits over the
+ * scene and never blocks the mic or Laddu, so the conversation carries on.
+ */
+export function TryHint({ better, english, onClose }: { better: string; english: string; onClose: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="try-hint pop" role="note">
+      <p className="try-hint-text"><span aria-hidden="true">💡 </span>Try: <strong>{better}</strong></p>
+      {open && english && <p className="english">{english}</p>}
+      <div className="try-hint-buttons">
+        {english && (
+          <button type="button" className="info-button" onClick={() => setOpen(!open)} aria-expanded={open}
+            aria-label="What does that mean in English?">ⓘ</button>
+        )}
+        <button type="button" className="link-button" onClick={onClose} aria-label="Close the hint">✕</button>
+      </div>
+    </div>
+  );
+}
+
 /** The soft cartoon background from the approved drafts. Purely decoration. */
 function Backdrop() {
   const tree = (x: number, y: number, k: number) => (
@@ -135,9 +157,11 @@ function Backdrop() {
   );
 }
 
-export function Stage({ ladduMouth, ladduEyes, myMouth, myEyes, ladduBubble, myBubble, overlay }: {
+export function Stage({ ladduMouth, ladduEyes, myMouth, myEyes, ladduBubble, myBubble, hint, overlay }: {
   ladduMouth: Mouth; ladduEyes: Eyes; myMouth: Mouth; myEyes: Eyes;
   ladduBubble: React.ReactNode; myBubble: React.ReactNode;
+  /** The "💡 Try: …" card under my bubble, when I scored below 7. */
+  hint?: React.ReactNode;
   /** Something shown over the scene for a moment (the ⓘ English card). */
   overlay?: React.ReactNode;
 }) {
@@ -149,6 +173,7 @@ export function Stage({ ladduMouth, ladduEyes, myMouth, myEyes, ladduBubble, myB
         <div className="actor me-actor"><Me crop="full" size={206} facing="left" mouth={myMouth} eyes={myEyes} /></div>
         <div className="bubble-wrap laddu-wrap">{ladduBubble}</div>
         <div className="bubble-wrap my-wrap">{myBubble}</div>
+        {hint && <div className="hint-wrap">{hint}</div>}
         {overlay}
       </div>
     </div>

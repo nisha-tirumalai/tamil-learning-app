@@ -3,11 +3,12 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import { CHIP_TEXT, PRAISE_LINES } from "@/lib/chat/config";
-import { chipFor } from "@/lib/chat/chip";
+import { chipFor, lowScoreHint } from "@/lib/chat/chip";
 import { toScore } from "@/lib/chat/scorer";
 import type { Attempt } from "@/lib/chat/turn";
 import { LadduBubble, MyTurn } from "@/components/Turns";
-import { EnglishCard, LadduSpeech, MySpeech, Stage } from "@/components/Scene";
+import { EnglishCard, LadduSpeech, MySpeech, Stage, TryHint } from "@/components/Scene";
+import { LadduIntro } from "@/components/LadduIntro";
 import { goodAnswer } from "./fixtures";
 
 const none = new Set<number>();
@@ -111,5 +112,53 @@ describe("the conversation scene (spec 003)", () => {
     expect(out).toContain("#ffd84d");   // the sun
     expect(out.indexOf("Laddu the teddy bear")).toBeLessThan(out.indexOf('aria-label="You"'));   // Laddu on the left
     expect(out).toContain("#7a2c22");   // an open mouth
+  });
+});
+
+describe("💡 hint when my score is below 7 (spec 003)", () => {
+  const low = { grammar: 4, spoken: 2, total: 6 };
+  test("below 7: the better way the scorer already wrote", () => {
+    expect(lowScoreHint([attempt(1, low)], none)).toEqual({ id: 1, better: goodAnswer.better, english: goodAnswer.better_english });
+  });
+  test("7 or more: no hint", () => {
+    expect(lowScoreHint([attempt(1)], none)).toBeNull();   // 7
+    expect(lowScoreHint([attempt(1, perfect, PRAISE_LINES[0])], none)).toBeNull();
+  });
+  test("no hint while the score is coming, for all English or safety, or with no score", () => {
+    expect(lowScoreHint([attempt(1, low)], new Set([1]))).toBeNull();
+    expect(lowScoreHint([attempt(1, allEnglish)], none)).toBeNull();
+    expect(lowScoreHint([attempt(1, safety)], none)).toBeNull();
+    expect(lowScoreHint([{ id: 1, text: "x", meant: null, score: null }], none)).toBeNull();
+    expect(lowScoreHint(null, none)).toBeNull();
+  });
+  test("it follows my latest try: a better retry makes it go away", () => {
+    expect(lowScoreHint([attempt(1, low), attempt(2)], none)).toBeNull();
+    expect(lowScoreHint([attempt(1), attempt(2, low)], none)?.id).toBe(2);
+  });
+  test("the card: Tanglish with 💡 Try:, English only behind ⓘ", () => {
+    const out = html(<TryHint better="Inniki naal sariyaa pogala." english="Today didn't go well." onClose={() => {}} />);
+    expect(out).toContain("💡");
+    expect(out).toContain("Try: <strong>Inniki naal sariyaa pogala.</strong>");
+    expect(out).toContain('class="info-button"');
+    expect(out).not.toContain("Today didn");
+  });
+  test("it sits in the scene and doesn't replace either bubble", () => {
+    const out = html(<Stage ladduMouth="closed" ladduEyes="open" myMouth="closed" myEyes="open"
+      ladduBubble={<span>L</span>} myBubble={<span>M</span>} hint={<span>H</span>} />);
+    expect(out).toContain('<div class="hint-wrap"><span>H</span></div>');
+    expect(out).toContain("<span>L</span>");
+    expect(out).toContain("<span>M</span>");
+  });
+});
+
+describe("welcome: Laddu introduces himself (spec 003)", () => {
+  test("his line in Tanglish, English only behind ⓘ, a button to hear him, then choose your avatar", () => {
+    const out = html(<LadduIntro />);
+    expect(out).toContain("Vanakkam! Naan Laddu. Tamil-la pesalaam!");
+    expect(out).toContain("What does that mean in English?");
+    expect(out).not.toContain("Let&#x27;s talk in Tamil");
+    expect(out).toContain("🔊 Hear Laddu");
+    expect(out).toContain('href="/choose-avatar"');
+    expect(out).not.toMatch(/[\u0B80-\u0BFF]/);   // no Tamil script on screen
   });
 });

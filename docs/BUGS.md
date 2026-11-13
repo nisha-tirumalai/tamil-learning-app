@@ -9,9 +9,11 @@ step, what I expected, what actually happened (exact message), and any clues
 
 | # | Found | Bug | Status |
 |---|---|---|---|
-| 9 | 2026-11-12 | Hold to talk fails on iPhone | 🟡 fix ready, check on iPhone |
-| 8 | 2026-11-12 | A spoken turn takes ~15 s (target 3 s) | 🟡 fix ready, measure on phone |
-| 7 | 2026-11-12 | Laddu's voice switched to an English accent on his second line | 🟡 fix ready, listen on phone |
+| 11 | 2026-11-13 | Scorer corrects my words before scoring them | 🔍 looking into it |
+| 10 | 2026-11-13 | Welcome screen: Laddu's voice is silent | 🟡 fix ready, check on phone |
+| 9 | 2026-11-12 | Hold to talk fails on iPhone | ✅ fixed (tested on iPhone 2026-11-13) |
+| 8 | 2026-11-12 | A spoken turn takes ~15 s (target 3 s) | ✅ fixed (2.3 s on phone, 2026-11-13) |
+| 7 | 2026-11-12 | Laddu's voice switched to an English accent on his second line | ✅ fixed (tested on phone 2026-11-13) |
 | 6 | 2026-11-12 | Scene background (sky, grass) missing in the real chat | ✅ fixed |
 | 5 | 2026-11-12 | CI failing: test expected log rows in a fixed order | ✅ fixed |
 | 4 | 2026-11-11 | Scorer changed my meaning words ("yesterday" → "today") | ✅ fixed |
@@ -21,7 +23,31 @@ step, what I expected, what actually happened (exact message), and any clues
 
 ## Details
 
-### 9. Hold to talk fails on iPhone
+### 11. Scorer corrects my words before scoring them
+- **Found:** 2026-11-13, phone test.
+- **Happened:** the score is given to a *corrected* version of what I said,
+  not to my own words, so mistakes can disappear before they're scored.
+- **Suspects (to check):** for spoken turns, two steps tidy my words before the
+  scorer sees them: the hearing service writes what it *thinks* I meant in
+  proper Tamil, and the Tanglish rewrite can tidy it further. For typed turns,
+  the scorer itself may be "reading" my sentence as the right one.
+- **Next:** Nisha sends 2–3 examples (what I said, what my bubble showed, the
+  score). Then decide the fix (e.g. score the words exactly as heard, and tell
+  the hearing step not to fix grammar). Candidate cases for the gold set.
+
+### 10. Welcome screen: Laddu's voice is silent
+- **Found:** 2026-11-13, phone test.
+- **Happened:** on the welcome screen Laddu's greeting has no sound.
+- **Why:** the old welcome screen ("Vaanga!") had no voice at all, and on a
+  fresh page a phone won't play any sound until you've tapped something, so
+  Laddu can't just start talking by himself.
+- **Fix (2026-11-13):** the new welcome screen (`/welcome`) where Laddu
+  introduces himself has a big **🔊 Hear Laddu** button; that tap allows sound
+  and plays him (his mouth moves). If you tapped your way to the screen, he
+  says hello by himself. His voice line is made once and kept, so it isn't a
+  new voice call every visit. To check: open `/welcome` on the phone and tap 🔊.
+
+### 9. Hold to talk fails on iPhone ✅ (confirmed on iPhone 2026-11-13)
 - **Device:** iPhone, Safari, through the codespace address.
 - **What I did:** tapped Laddu starts, held 🎤, talked, let go.
 - **Expected:** my words appear and Laddu replies.
@@ -43,7 +69,7 @@ step, what I expected, what actually happened (exact message), and any clues
   shows under "couldn't hear that" (`quiet`, `short`, `mic-error:…`, `failed`,
   `silent`) so the next report says which step failed.
 
-### 8. A spoken turn takes ~15 s
+### 8. A spoken turn takes ~15 s ✅ (2.3 s on phone, 2026-11-13)
 - **Happened:** `POST /talk` 13.4 s, then `GET /api/speech` 1.4 s. A typed turn
   (`/send`) took 11.6 s.
 - **Why (likely):** every step runs one after another (hear → Tanglish rewrite →
@@ -57,7 +83,7 @@ step, what I expected, what actually happened (exact message), and any clues
   bubble text and score are made in the background and never hold him up. To
   check: the `api_calls` query in PLAN.md.
 
-### 7. Laddu's accent changed
+### 7. Laddu's accent changed ✅ (Charlie sounded Tamil every time, 2026-11-13)
 - **Happened:** Charlie's first line sounded great; the second had a strong
   English accent.
 - **Likely why:** the voice guesses the language from the text. If it got

@@ -11,8 +11,8 @@ export default async function Welcome() {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   const { data: profile } = await db.from("profiles").select("display_name, avatar").eq("id", user?.id ?? "").maybeSingle();
-  // First sign-in (spec 003): choose your avatar before anything else.
-  if (profile && !profile.avatar) redirect("/choose-avatar");
+  // First sign-in (spec 003): Laddu says hello, then you choose your avatar.
+  if (profile && !profile.avatar) redirect("/welcome");
   const name = firstName(profile?.display_name);
   return (
     <div className="welcome">

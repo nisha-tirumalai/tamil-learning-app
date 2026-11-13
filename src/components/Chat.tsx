@@ -11,12 +11,13 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { fixWhatISaid, flag, notWhatIMeant, send, tryScoringAgain } from "@/app/chat/actions";
 import { CAP_TEXT, ERROR_TEXT, NUDGE_TEXT } from "@/lib/chat/config";
+import { lowScoreHint } from "@/lib/chat/chip";
 import type { Score } from "@/lib/chat/scorer";
 import type { Attempt, CardResult, ThreadItem, TurnEvent } from "@/lib/chat/turn";
 import { HEARING_ERROR_TEXT, VOICE_CONFIG } from "@/lib/voice/config";
 import { mouthFor, voicePlayer, type VoicePlayer } from "@/lib/voice/player";
 import { type CardActions, CorrectionCard } from "./CorrectionCard";
-import { EnglishCard, type LadduLine, LadduSpeech, MySpeech, Stage, useBlink } from "./Scene";
+import { EnglishCard, type LadduLine, LadduSpeech, MySpeech, Stage, TryHint, useBlink } from "./Scene";
 import { LadduBubble, MyTurn } from "./Turns";
 import { useHoldToTalk } from "./useHoldToTalk";
 
@@ -319,6 +320,10 @@ function LiveChat({ conversationId, initial, opener, title }: {
   const myMouth = recording ? mouthFor(mic.level) : "closed";
   const mineAttempts = lastMine?.type === "me" ? lastMine.attempts : null;
   const mineLatest = mineAttempts?.at(-1);
+  // 💡 hint: my latest line scored below 7. ✕ hides it for that line only.
+  const [hiddenHint, setHiddenHint] = useState<number | null>(null);
+  const hint = lowScoreHint(mineAttempts, pending);
+  const showHint = hint && hint.id !== hiddenHint && !recording && status.kind !== "hearing" ? hint : null;
   const cardItem = panel?.kind === "card" ? items.find((i) => i.type === "me" && i.id === panel.id) : undefined;
   const fixAttempt = panel?.kind === "fix" ? mineAttempts?.find((a) => a.id === panel.id) : undefined;
 
@@ -357,6 +362,7 @@ function LiveChat({ conversationId, initial, opener, title }: {
         ladduBubble={<LadduSpeech line={ladduLine} infoOpen={showEnglish} onInfo={() => setShowEnglish(!showEnglish)} />}
         overlay={showEnglish && ladduLine?.kind === "line" && ladduLine.english
           ? <EnglishCard english={ladduLine.english} onClose={() => setShowEnglish(false)} /> : null}
+        hint={showHint ? <TryHint key={showHint.id} better={showHint.better} english={showHint.english} onClose={() => setHiddenHint(showHint.id)} /> : null}
         myBubble={(
           <MySpeech
             attempts={mineAttempts}
