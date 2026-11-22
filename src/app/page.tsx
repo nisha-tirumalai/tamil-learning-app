@@ -5,7 +5,7 @@ import { Laddu } from "@/components/Characters";
 import { WELCOME } from "@/lib/chat/config";
 import { firstName } from "@/lib/chat/pick";
 import { createClient } from "@/lib/supabase/server";
-import { start } from "./chat/actions";
+import { StartButtons } from "@/components/StartButtons";
 
 export default async function Welcome() {
   const db = await createClient();
@@ -21,10 +21,7 @@ export default async function Welcome() {
         <p className="tanglish">{WELCOME.tanglish(name)}</p>
         <p className="english">{WELCOME.english(name)}</p>
       </div>
-      <div className="start-buttons">
-        <form action={start.bind(null, "me")}><button>I start</button></form>
-        <form action={start.bind(null, "laddu")}><button>Laddu starts</button></form>
-      </div>
+      <StartButtons />
       <Link href="/chats">Past chats ›</Link>
     </div>
   );

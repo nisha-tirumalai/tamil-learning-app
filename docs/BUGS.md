@@ -9,6 +9,7 @@ step, what I expected, what actually happened (exact message), and any clues
 
 | # | Found | Bug | Status |
 |---|---|---|---|
+| 13 | 2026-11-22 | Home screen: "I start" / "Laddu starts" seem to do nothing when tapped | 🟡 fix ready, check in the app |
 | 12 | 2026-11-13 | Welcome screen tiny, "Hear Laddu" button looked switched off | 🟡 fix ready, check on phone |
 | 11 | 2026-11-13 | Scorer corrects my words before scoring them | 🔍 looking into it |
 | 10 | 2026-11-13 | Welcome screen: Laddu's voice is silent | 🟡 fix ready, check on phone |
@@ -23,6 +24,20 @@ step, what I expected, what actually happened (exact message), and any clues
 | 1 | 2026-11-07 | Magic-link login says "expired" when opened in a different browser | 🟡 workaround |
 
 ## Details
+
+### 13. Home screen: "I start" / "Laddu starts" seem to do nothing
+- **Found:** 2026-11-22, running the app in the Codespace.
+- **Happened:** tapping "I start" or "Laddu starts" didn't seem to do anything.
+- **Why:** the buttons do work, but starting a chat takes a few seconds, and
+  much longer the first time after `npm run dev` because the dev server has
+  to build the chat page first (5–15 s in a Codespace). Nothing on screen
+  changed while that happened, so the buttons looked broken. If starting
+  failed, there was also no friendly error screen.
+- **Fixed:** the tapped button now says "Starting…" straight away and both
+  buttons lock until the chat opens. A new error screen ("Aiyo! Something
+  went wrong", with a Try again button) shows if a page breaks. Checked in a
+  test browser at phone size against the local test database: both buttons
+  show "Starting…" and then open a new chat.
 
 ### 12. Welcome screen tiny, "Hear Laddu" button looked switched off
 - **Found:** 2026-11-13, first look at the new welcome screen.
